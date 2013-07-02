@@ -1,0 +1,14 @@
+{
+  "title": "Payment",
+  "description": "A payment handling component used for easy integration of payment systems into your components.",
+  "type": "manual",
+  "dbUpdates": true,
+  "versions": [
+    {
+      "version": "0.0.1-alpha",
+      "date": "2013-07-01",
+      "description": "Implementing installation and first payment option: Rabobank iDeal \"OmniKassa\".",
+      "changes": []
+    }
+  ]
+}
