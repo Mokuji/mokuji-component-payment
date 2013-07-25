@@ -1,8 +1,8 @@
 <?php namespace components\payment; if(!defined('TX')) die('No direct access.');
 
 //Make sure we have the things we need for this class.
-tx('Component')->check('update');
-tx('Component')->load('update', 'classes\\BaseDBUpdates', false);
+mk('Component')->check('update');
+mk('Component')->load('update', 'classes\\BaseDBUpdates', false);
 
 class DBUpdates extends \components\update\classes\BaseDBUpdates
 {
@@ -10,7 +10,43 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
   protected
     $component = 'payment',
     $updates = array(
+      '0.0.1-alpha' => '0.0.2-alpha'
     );
+  
+  protected function update_to_0_0_2_alpha($current_version, $forced)
+  {
+    
+    if($forced){
+      mk('Sql')->query("DROP TABLE IF EXISTS `#__payment_transactions`");
+    }
+    
+    mk('Sql')->query("
+      CREATE TABLE `#__payment_transactions` (
+        `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        `method` ENUM('IDEAL') NULL,
+        `handler` int(10) unsigned NULL,
+        `transaction_reference` varchar(255) NULL,
+        `dt_transaction_local` DATETIME NULL,
+        `dt_transaction_remote` DATETIME NULL DEFAULT NULL,
+        `currency` varchar(10) NULL,
+        `total_price` double NULL,
+        `confirmed_amount` double NOT NULL DEFAULT '0',
+        `status` ENUM('SUCCESS', 'CANCELLED', 'EXPIRED', 'OPEN', 'FAILED', 'UNCONFIRMED') NOT NULL DEFAULT 'UNCONFIRMED',
+        `dt_status_changed` DATETIME NULL DEFAULT NULL,
+        `error_information` TEXT NULL DEFAULT NULL,
+        `entry_code` varchar(255) NULL DEFAULT NULL,
+        `dt_entry_code_expires` DATETIME NULL DEFAULT NULL,
+        `consumer_name` varchar(255) NULL DEFAULT NULL,
+        `consumer_email` varchar(255) NULL DEFAULT NULL,
+        `consumer_iban` varchar(255) NULL DEFAULT NULL,
+        `consumer_bic` varchar(255) NULL DEFAULT NULL,
+        PRIMARY KEY (`id`),
+        INDEX `transaction_reference` (`transaction_reference`),
+        INDEX `status` (`status`)
+      ) ENGINE=MyISAM DEFAULT CHARSET=utf8
+    ");
+    
+  }
   
   protected function install_0_0_1_alpha($dummy_data, $forced)
   {
@@ -21,7 +57,7 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
       'min_version' => '0.4.1-beta'
       ), function($version){
         
-        tx('Component')->helpers('cms')->_call('ensure_pagetypes', array(
+        mk('Component')->helpers('cms')->_call('ensure_pagetypes', array(
           array(
             'name' => 'payment',
             'title' => 'Payment'

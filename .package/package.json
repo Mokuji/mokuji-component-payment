@@ -5,6 +5,12 @@
   "dbUpdates": true,
   "versions": [
     {
+      "version": "0.0.2-alpha",
+      "date": "2013-07-25",
+      "description": "Adding core models for transactions.",
+      "changes": []
+    },
+    {
       "version": "0.0.1-alpha",
       "date": "2013-07-01",
       "description": "Implementing installation and first payment option: Rabobank iDeal \"OmniKassa\".",

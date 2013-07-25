@@ -41,7 +41,7 @@ abstract class BaseHandler
       
       case self::TYPE_RABOBANK_OMNIKASSA:
         tx('Component')->load('payment', 'methods\\ideal\\RabobankOmniKassaHandler', false);
-        return new RabobankOmniKassaHandler($config->rabobank);
+        return new RabobankOmniKassaHandler($config);
       
       default:
         throw new \exception\InvalidArgument('Provided type "%s" is not supported. Please use the available constants.', $type);
