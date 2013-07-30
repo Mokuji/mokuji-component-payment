@@ -244,6 +244,7 @@
 
 					return array('transaction_reference' => $aData['transactionReference'], 'transaction_status' => $this->getTransactionStatus($aData['responseCode']), 'transaction_id' => (empty($aData['authorisationId']) ? '' : $aData['authorisationId']), 'order_id' => $aData['orderId'], 'raw_data' => $aData);
 				}
+				
 			}
 
 			return false;

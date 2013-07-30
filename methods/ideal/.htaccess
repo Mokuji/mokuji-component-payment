@@ -1,0 +1,6 @@
+RewriteEngine On
+
+## Rewrite Rabobank OmniKassa callbacks to an action.
+#TODO: This can be replaced by actual files and running the Mokuji core using the initializer system, after the rework is done.
+RewriteRule ^/?rabobank-omnikassa-return.php$ ../../../../../index.php?action=payment/rabobank_omnikassa_return
+RewriteRule ^/?rabobank-omnikassa-report.php$ ../../../../../index.php?action=payment/rabobank_omnikassa_report

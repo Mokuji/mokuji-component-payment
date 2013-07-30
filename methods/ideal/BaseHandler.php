@@ -92,7 +92,7 @@ abstract class BaseHandler
             ->get('string'),
           
           'test_mode' => mk('Config')
-            ->user('mokuji_payment_ideal_rabobank_omnikassa_security_test_mode')
+            ->user('mokuji_payment_ideal_rabobank_omnikassa_test_mode')
             ->otherwise(true)
             ->get('boolean')
           

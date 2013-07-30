@@ -10,18 +10,28 @@ class Transactions extends \dependencies\BaseModel
     $relations = array(
     );
   
-  public static function create($total_price = null, $currency = 'EUR')
+  public static function create_transaction($total_price = null, $currency = 'EUR')
   {
     
     $tx = mk('Sql')->model('payment', 'Transactions');
     
-    //Create reference.
-    $time = time().microtime();
-    $salt = mk('Security')->random_string(32);
+    //Create unique reference.
     $algoritm = mk('Security')->pref_hash_algo(128, false);
-    $tx->transaction_reference->set(
-      mk('Security')->hash("transaction|$time|$salt", $algoritm)
-    );
+    do{
+      
+      $time = time().microtime();
+      $salt = mk('Security')->random_string(32);
+      $nonce = 0;
+      $tx->transaction_reference->set(
+        mk('Security')->hash("transaction|$time|$salt|$nonce", $algoritm)
+      );
+      
+      $is_unique = mk('Sql')
+        ->table('payment', 'Transactions')
+        ->where('transaction_reference', "'{$tx->transaction_reference}'")
+        ->count()->get() <= 0;
+      
+    } while(!$is_unique);
     
     //Store currency.
     $tx->currency->set(strtoupper($currency));
@@ -37,6 +47,21 @@ class Transactions extends \dependencies\BaseModel
     $tx->save();
     
     return $tx;
+    
+  }
+  
+  public function claim($method, $handler)
+  {
+    
+    if(!$this->method->get() === 'UNCONFIRMED')
+      return false;
+    
+    $this->merge(array(
+      'method' => strtoupper($method),
+      'handler' => $handler
+    ));
+    
+    return $this->save();
     
   }
   

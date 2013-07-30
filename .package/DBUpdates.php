@@ -10,8 +10,34 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
   protected
     $component = 'payment',
     $updates = array(
-      '0.0.1-alpha' => '0.0.2-alpha'
+      '0.0.1-alpha' => '0.0.2-alpha',
+      '0.0.2-alpha' => '0.0.3-alpha'
     );
+  
+  protected function update_to_0_0_3_alpha($current_version, $forced)
+  {
+    
+    //Queue self-deployment with CMS component.
+    $this->queue(array(
+      'component' => 'cms',
+      'min_version' => '0.4.1-beta'
+      ), function($version){
+        
+        mk('Component')->helpers('cms')->_call('ensure_pagetypes', array(
+          array(
+            'name' => 'payment',
+            'title' => 'Payment'
+          ),
+          array(
+            'manager' => 'DELETE',
+            'settings' => 'SETTINGS'
+          )
+        ));
+        
+      }
+    ); //END - Queue CMS
+    
+  }
   
   protected function update_to_0_0_2_alpha($current_version, $forced)
   {

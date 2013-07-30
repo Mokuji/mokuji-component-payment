@@ -5,6 +5,12 @@
   "dbUpdates": true,
   "versions": [
     {
+      "version": "0.0.3-alpha",
+      "date": "2013-07-30",
+      "description": "Switched from a manager to a settings view for configuring this component.",
+      "changes": []
+    },
+    {
       "version": "0.0.2-alpha",
       "date": "2013-07-25",
       "description": "Adding core models for transactions.",
