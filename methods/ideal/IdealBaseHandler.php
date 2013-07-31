@@ -1,10 +1,16 @@
 <?php namespace components\payment\methods\ideal; if(!defined('TX')) die('No direct access.');
 
+mk('Sql')->model('payment', 'Transactions');
+use \components\payment\models\Transactions;
+
+mk('Component')->load('payment', 'methods\\BaseHandler', false);
+use \components\payment\methods\BaseHandler;
+
 /**
  * A base class that serves as a factory for the different available iDeal payment method handlers as well
  * as defining common functionality across iDeal implementations.
  */
-abstract class BaseHandler
+abstract class IdealBaseHandler extends BaseHandler
 {
   
   //iDeal payment method handler types available.
@@ -14,7 +20,7 @@ abstract class BaseHandler
    * Gets a new iDeal payment method handler instance based on the provided type or the type setting.
    * @param integer $type Optional type constant identifying the type of handler.
    *                      Default: the mokuji_payment_ideal_handler configuration value.
-   * @return IdealHandler The requested type of handler.
+   * @return BaseHandler  The requested type of handler.
    */
   public static function get_handler($type=null)
   {
@@ -103,6 +109,30 @@ abstract class BaseHandler
     ));
     
   }
+  
+  /**
+   * Builds the request meta-data to send in a form starting the transaction.
+   * @param  \components\payment\models\Transactions $tx The transaction model to base the transaction on.
+   * @param string $return_url The location where the eventual status should be reported (ie. the webshop order confirmation page).
+   * @return \dependencies\Data The method, action and data to build the form with.
+   */
+  // abstract public function transaction_start_request(Transactions $tx, $return_url);
+  
+  /**
+   * Builds a form starting the transaction.
+   * @param  \components\payment\models\Transactions $tx The transaction model to base the transaction on.
+   * @param string $return_url The location where the eventual status should be reported (ie. the webshop order confirmation page).
+   * @param boolean $immediate Whether or not to immediately start the transaction after this output has been included.
+   * @return string The HTML form.
+   */
+  // abstract public function transaction_start_button(Transactions $tx, $return_url, $immediate=false);
+  
+  /**
+   * Processes a callback from the acquiring service and updates the corresponding transaction.
+   * @param  array $post_data The full POST data provided with the callback.
+   * @return \components\payment\models\Transactions $tx The transaction that has been updated.
+   */
+  // abstract public function transaction_callback($post_data);
   
   /**
    * The path to the iDeal payment method folder.

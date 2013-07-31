@@ -5,6 +5,18 @@
   "dbUpdates": true,
   "versions": [
     {
+      "version": "0.0.5-alpha",
+      "date": "2013-07-31",
+      "description": "Added missing field for PayPal Express Checkout.",
+      "changes": []
+    },
+    {
+      "version": "0.0.4-alpha",
+      "date": "2013-07-31",
+      "description": "Added PayPal payment option.",
+      "changes": []
+    },
+    {
       "version": "0.0.3-alpha",
       "date": "2013-07-30",
       "description": "Switched from a manager to a settings view for configuring this component.",

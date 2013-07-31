@@ -45,4 +45,44 @@ class Actions extends \dependencies\BaseComponent
     
   }
   
+  protected function paypal_express_checkout($data)
+  {
+    
+    mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
+    
+    trace($data);
+    
+    $tx = mk('Sql')->table('payment', 'Transactions')
+      ->where('transaction_reference', "'".mk('Data')->get->tx."'")
+      ->execute_single();
+    
+    
+    if($tx->is_empty())
+      throw \exception\NotFound('No transaction with this reference.');
+    
+    $handler = methods\paypal\PayPalHandler::get_handler();
+    $handler->set_express_checkout($tx);
+    exit;
+    
+  }
+  
+  protected function paypal_return($data)
+  {
+    
+    trace(mk('Data')->get->dump());
+    trace(mk('Data')->post->dump());
+    
+    mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
+    $handler = methods\paypal\PayPalHandler::get_handler();
+    
+    $details = $handler->get_express_checkout_details(mk('Data')->get->token);
+    trace($details['response'], $details['model']->dump());
+    
+    if($details['response']['CHECKOUTSTATUS'] === 'PaymentActionNotInitiated')
+      $handler->do_express_checkout_payment($details['model']);
+    
+    exit;
+    
+  }
+  
 }

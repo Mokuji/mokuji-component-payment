@@ -11,8 +11,46 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
     $component = 'payment',
     $updates = array(
       '0.0.1-alpha' => '0.0.2-alpha',
-      '0.0.2-alpha' => '0.0.3-alpha'
+      '0.0.2-alpha' => '0.0.3-alpha',
+      '0.0.3-alpha' => '0.0.4-alpha',
+      '0.0.4-alpha' => '0.0.5-alpha'
     );
+  
+  protected function update_to_0_0_5_alpha($current_version, $forced)
+  {
+    
+    try{
+      
+      mk('Sql')->query("
+        ALTER TABLE `#__payment_transactions`
+          ADD COLUMN `consumer_payerid` varchar(255) NULL DEFAULT NULL AFTER `consumer_email`
+      ");
+      
+    }catch(\exception\Sql $ex){
+      //When it's not forced, this is a problem.
+      //But when forcing, ignore this.
+      if(!$forced) throw $ex;
+    }
+    
+  }
+  
+  protected function update_to_0_0_4_alpha($current_version, $forced)
+  {
+    
+    try{
+      
+      mk('Sql')->query("
+        ALTER TABLE `#__payment_transactions`
+          CHANGE COLUMN `method` `method` ENUM('IDEAL','PAYPAL') NULL DEFAULT NULL AFTER `id`
+      ");
+      
+    }catch(\exception\Sql $ex){
+      //When it's not forced, this is a problem.
+      //But when forcing, ignore this.
+      if(!$forced) throw $ex;
+    }
+    
+  }
   
   protected function update_to_0_0_3_alpha($current_version, $forced)
   {

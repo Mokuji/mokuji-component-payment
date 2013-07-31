@@ -3,15 +3,15 @@
 mk('Sql')->model('payment', 'Transactions');
 use \components\payment\models\Transactions;
 
-mk('Component')->load('payment', 'methods\\ideal\\BaseHandler', false);
+mk('Component')->load('payment', 'methods\\ideal\\IdealBaseHandler', false);
 
 //Add the library provided by Rabobank.
-require_once(BaseHandler::get_ideal_path().DS.'lib-omnikassa'.DS.'omnikassa.cls.5.php');
+require_once(IdealBaseHandler::get_ideal_path().DS.'lib-omnikassa'.DS.'omnikassa.cls.5.php');
 
 /**
  * The Rabobank OmniKassa iDeal payment method handler.
  */
-class RabobankOmniKassaHandler extends BaseHandler
+class RabobankOmniKassaHandler extends IdealBaseHandler
 {
   
   /**
@@ -59,9 +59,10 @@ class RabobankOmniKassaHandler extends BaseHandler
   /**
    * Builds the request meta-data to send in a form starting the transaction.
    * @param  \components\payment\models\Transactions $tx The transaction model to base the transaction on.
+   * @param string $return_url The location where the eventual status should be reported (ie. the webshop order confirmation page).
    * @return \dependencies\Data The method, action and data to build the form with.
    */
-  public function transaction_start_request(Transactions $tx)
+  public function transaction_start_request(Transactions $tx, $return_url)
   {
     
     //Ensure the required fields are present.
@@ -77,6 +78,9 @@ class RabobankOmniKassaHandler extends BaseHandler
     //Check the currency.
     if(!in_array($tx->currency->get('string'), array('EUR')))
       throw new \exception\InvalidArgument("This payment method handler only supports the 'EUR' currency.");
+    
+    //Store the location where we should return.
+    mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->set($return_url);
     
     //Add extra fields to the library.
     // $this->lib->setOrderId($tx->order_id->get('string')); #TODO: this should be an order ID from any higher-level components.
@@ -109,10 +113,7 @@ class RabobankOmniKassaHandler extends BaseHandler
   {
     
     //Get the request information.
-    $request = self::transaction_start_request($tx);
-    
-    //Store the location where we should return.
-    mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->set($return_url);
+    $request = self::transaction_start_request($tx, $return_url);
     
     //Create a unique name for the form.
     $uname = 'tx_'.$tx->transaction_reference->get('string').'_'.sha1(uniqid($tx->order_id->get('string'), true));

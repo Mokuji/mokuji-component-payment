@@ -3,21 +3,47 @@
 class Helpers extends \dependencies\BaseComponent
 {
   
-  /*
+  public function curl($method, $url, $post_data='')
+  {
     
-    # The Helpers.php file
+    if(is_string($post_data)){
+      $POST = $post_data;
+    }
     
-    This is where you define helper functions.
-    Helpers are used to make common operations easier for programmers to implement.
-    If you find yourself copying the same pieces of code over and over again
-    you probably want to make a function here to easily maintain your code.
+    elseif(is_array($post_data)){
+      $POST = '';
+      $first = true;
+      foreach ($post_data as $key => $value){
+        $POST .= ($first ? '' : '&').urlencode($key).'='.urlencode($value);
+        $first = false;
+      }
+    }
     
-    Call a helper using:
-      tx('Component')->helpers('component_name')->call('function_name' array($arguments));
+    $handle = curl_init();
+    curl_setopt_array($handle, array(
+      CURLOPT_URL => $url,
+      CURLOPT_CUSTOMREQUEST => strtoupper($method),
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_POSTFIELDS => $POST
+    ));
     
-    Read more about actions here:
-      https://github.com/Tuxion/mokuji/wiki/Helpers.php
+    $response = curl_exec($handle);
     
-  */
+    curl_close($handle);
+    return $response;
+    
+  }
+  
+  public function parse_query($string)
+  {
+    $parts = explode('&', $string);
+    $data = array();
+    foreach ($parts as $part) {
+      $kv_pair = explode('=', $part);
+      $data[$kv_pair[0]] = array_key_exists(1, $kv_pair) ? urldecode($kv_pair[1]) : null;
+    }
+    return $data;
+  }
   
 }

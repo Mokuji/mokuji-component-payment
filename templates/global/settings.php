@@ -36,6 +36,38 @@
     
   </div>
   
+  <div class="ctrlHolder">
+    <label>PayPal</label>
+    <select class="paypal-handler" name="mokuji_payment_paypal_handler[default]">
+      <option value="-1"<?php $data->paypal->handler->eq('-1', function(){ echo ' selected="selected"'; }); ?>><?php __($names->component, 'Disabled'); ?></option>
+      <option value="1"<?php $data->paypal->handler->eq('1', function(){ echo ' selected="selected"'; }); ?>>Enabled</option>
+    </select>
+  </div>
+  
+  <div class="ctrlHolder paypal-handler" data-paypal="1">
+    <h2>PayPal</h2>
+    
+    <?php $ec = $data->paypal->ec; ?>
+    
+    <label><?php __($names->component, 'User'); ?></label>
+    <input type="text" name="mokuji_payment_paypal_ec_user[default]" value="<?php echo $ec->user; ?>" />
+    
+    <label><?php __($names->component, 'Password'); ?></label>
+    <input type="text" name="mokuji_payment_paypal_ec_pwd[default]" value="<?php echo $ec->pwd; ?>" />
+    
+    <label><?php __($names->component, 'Signature'); ?></label>
+    <input type="text" name="mokuji_payment_paypal_ec_signature[default]" value="<?php echo $ec->signature; ?>" />
+    
+    <label><?php __($names->component, 'Description'); ?></label>
+    <input type="text" name="mokuji_payment_paypal_ec_description[default]" value="<?php echo $ec->description; ?>" />
+    
+    <label>
+      <input type="checkbox" name="mokuji_payment_paypal_ec_sandbox[default]" value="1"<?php $ec->sandbox->is(true, function(){ echo ' checked="checked"'; }); ?> />
+      <?php __($names->component, 'Sandbox'); ?>
+    </label>
+    
+  </div>
+  
   <div class="buttonHolder">
     <input type="submit" value="<?php __('Save'); ?>" class="primaryAction button black">
   </div>
@@ -48,26 +80,36 @@ $(function(){
   $('#payment_configuration_form').restForm();
   
   $('#payment_configuration_form').on('change', 'select.ideal-handler', function(e){
-    
     var handler = $(e.target).val();
     $('.ctrlHolder.ideal-handler').hide();
     $('.ctrlHolder[data-ideal="'+handler+'"]').show();
-    
   });
   
-  $('#payment_configuration_form select.ideal-handler').trigger('change');
+  $('#payment_configuration_form').on('change', 'select.paypal-handler', function(e){
+    var handler = $(e.target).val();
+    $('.ctrlHolder.paypal-handler').hide();
+    $('.ctrlHolder[data-paypal="'+handler+'"]').show();
+  });
+  
+  $('#payment_configuration_form select.paypal-handler').trigger('change');
   
 });
 </script>
 
 <?php
 
-mk('Component')->load('payment', 'methods\\ideal\\BaseHandler', false);
+mk('Component')->load('payment', 'methods\\ideal\\IdealBaseHandler', false);
+mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
 $tx_model = mk('Sql')->model('payment', 'Transactions');
 
-$handler = methods\ideal\BaseHandler::get_handler();
-$tx = $tx_model::create_transaction(5);
+$tx = $tx_model::create_transaction(1.25);
 
+//iDeal
+$handler = methods\ideal\IdealBaseHandler::get_handler();
+echo $handler->transaction_start_button($tx, 'http://localhost/mokuji/admin/index.php?view=cms/settings');
+
+//PayPal
+$handler = methods\paypal\PayPalHandler::get_handler();
 echo $handler->transaction_start_button($tx, 'http://localhost/mokuji/admin/index.php?view=cms/settings');
 
 ?>
