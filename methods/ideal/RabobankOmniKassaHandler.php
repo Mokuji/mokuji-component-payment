@@ -21,6 +21,12 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
   protected $lib;
   
   /**
+   * The title of this handler, used for logging.
+   * @var string
+   */
+  protected $title;
+  
+  /**
    * Constructs a new instance based on the Rabobank iDeal settings provided.
    * @param \depencies\Data $config Specific Rabobank iDeal settings.
    */
@@ -54,6 +60,11 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     //Fixed value: payment method = iDeal
     $this->lib->setPaymentMethod('IDEAL');
     
+    //Set title.
+    $this->title = $config->rabobank->omnikassa->test_mode->get('boolean') ?
+      "Rabobank OmniKassa TestMode":
+      "Rabobank OmniKassa";
+    
   }
   
   /**
@@ -80,7 +91,7 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
       throw new \exception\InvalidArgument("This payment method handler only supports the 'EUR' currency.");
     
     //Store the location where we should return.
-    mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->set($return_url);
+    mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->set((string)$return_url);
     
     //Add extra fields to the library.
     // $this->lib->setOrderId($tx->order_id->get('string')); #TODO: this should be an order ID from any higher-level components.
@@ -164,6 +175,7 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     if($tx->is_empty())
       return false;
     
+    #TODO: What if you paid the same transaction with two payment methods? At least log it.
     if(!$tx->claim('IDEAL', self::TYPE_RABOBANK_OMNIKASSA))
       return false;
     
@@ -196,12 +208,37 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
       'error_information' => $error,
       'confirmed_amount' => ($status === 'SUCCESS' ? $tx->total_price : 0),
       'dt_status_changed' => date('Y-m-d H:i:s'),
-      'dt_transaction_local' => date('Y-m-d H:i:s'),
+      'dt_transaction_local' => $tx->dt_transaction_local->otherwise(date('Y-m-d H:i:s'))->get(),
       'dt_transaction_remote' => date('Y-m-d H:i:s', strtotime($response['raw_data']['transactionDateTime'])),
-      'consumer_iban' => array_key_exists('maskedPan', $responseCode['raw_data']) ? $responseCode['raw_data']['maskedPan'] : 'NULL'
+      'consumer_iban' => array_key_exists('maskedPan', $response['raw_data']) ? $response['raw_data']['maskedPan'] : $tx->consumer_iban->get(),
+      'transaction_id_remote' => $response['transaction_id']
     ));
     
-    return $tx->save();
+    $tx->save();
+    
+    mk('Logging')->log('Payment', $this->title, "TX callback completed ".$tx->transaction_reference.' = '.$tx->status);
+    
+    $tx->report();
+    
+    return $tx;
+    
+  }
+  
+  /**
+   * Attempts to update the status of the transaction.
+   * Note: Errors will throw an exception, but if updating was not required or not supported, FALSE will be returned.
+   * @param  Transactions $tx The transaction to update the status for.
+   * @return boolean Whether or not the status was updated.
+   */
+  public function update_status(Transactions $tx)
+  {
+    
+    /*
+      Rabobank OmniKassa only sends reports from the server.
+      Polling for a status is not supported.
+    */
+    
+    return false;
     
   }
   

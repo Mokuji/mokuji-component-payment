@@ -3,27 +3,47 @@
 class Json extends \dependencies\BaseComponent
 {
   
-  /*
+  public function get_status_updates($options, $sub_routes)
+  {
     
-    # The Json.php file
+    $updated = 0;
+    $errors = array();
     
-    This is where you define REST calls.
-    They are mostly used for asynchronous operations, such as jQuery.restForm.
-    If you need the operation to cause a pageload, you probably need the Actions.php file.
+    $result = mk('Sql')->table('payment', 'Transactions')
+      ->where('status', array("'OPEN'", "'UNCONFIRMED'"))
+      ->execute()
+      ->each(function($tx)use(&$updated, &$errors){
+        
+        try{
+          
+          //1,5 minute per item seems more than enough.
+          set_time_limit(90);
+          $handler = $tx->handler();
+          
+          //Check with the handler if the status is updated.
+          if($handler && $handler->update_status($tx))
+            $updated++;
+          
+          //Check if the transaction expired.
+          elseif($tx->status->get('string') === 'UNCONFIRMED' && $tx->is_expired->get('boolean') === true)
+            $updated++;
+          
+        }
+        
+        catch(\Exception $ex){
+          $errors[$tx->id->get('int')] = $ex->getMessage();
+        }
+        
+      });
     
-    REST calls are prefixed based on the request type.
-    For example, calling ?rest=component_name/function_name using an HTTP GET request
-    calls get_function_name in the corresponding Json.php file.
+    mk('Logging')->log('Payment', 'Manual status updates', $updated.'/'.$result->size().' updated with '.count($errors).' errors.');
     
-    The prefixes:
-      HTTP GET     = get_function_name
-      HTTP PUT     = update_function_name
-      HTTP POST    = create_function_name
-      HTTP DELETE  = delete_function_name
+    return array(
+      'updated' => $updated,
+      'matched' => $result->size(),
+      'errors' => $errors
+    );
     
-    Read more about actions here:
-      https://github.com/Tuxion/mokuji/wiki/Json.php
-    
-  */
+  }
   
 }

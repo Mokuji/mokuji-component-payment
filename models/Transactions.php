@@ -3,6 +3,9 @@
 class Transactions extends \dependencies\BaseModel
 {
   
+  const
+    EXPIRE_AFTER = 86400; //24 hours
+  
   protected static
   
     $table_name = 'payment_transactions',
@@ -13,15 +16,18 @@ class Transactions extends \dependencies\BaseModel
   public static function create_transaction($total_price = null, $currency = 'EUR')
   {
     
+    raw($total_price);
+    
     $tx = mk('Sql')->model('payment', 'Transactions');
     
     //Create unique reference.
     $algoritm = mk('Security')->pref_hash_algo(128, false);
+    $time = time().microtime();
+    $salt = mk('Security')->random_string(32);
+    $nonce = 0;
+    
     do{
       
-      $time = time().microtime();
-      $salt = mk('Security')->random_string(32);
-      $nonce = 0;
       $tx->transaction_reference->set(
         mk('Security')->hash("transaction|$time|$salt|$nonce", $algoritm)
       );
@@ -30,6 +36,8 @@ class Transactions extends \dependencies\BaseModel
         ->table('payment', 'Transactions')
         ->where('transaction_reference', "'{$tx->transaction_reference}'")
         ->count()->get() <= 0;
+      
+      $nonce++;
       
     } while(!$is_unique);
     
@@ -50,10 +58,16 @@ class Transactions extends \dependencies\BaseModel
     
   }
   
+  /**
+   * Binds the transaction to a specific payment method and handler.
+   * @param  string $method
+   * @param  int    $handler
+   * @return $this
+   */
   public function claim($method, $handler)
   {
     
-    if(!$this->method->get() === 'UNCONFIRMED')
+    if($this->get_is_claimed())
       return false;
     
     $this->merge(array(
@@ -63,6 +77,75 @@ class Transactions extends \dependencies\BaseModel
     
     return $this->save();
     
+  }
+  
+  public function handler()
+  {
+    
+    return \components\payment\methods\BaseHandler::find_handler($this);
+    
+  }
+  
+  public function report()
+  {
+    
+    if($this->report_helper->is_set()){
+      
+      $parts = explode('/', $this->report_helper->get('string'));
+      
+      try{
+        mk('Component')->helpers($parts[0])->_call($parts[1], array($this->transaction_reference->get('string')));
+      }
+      
+      catch(\Exception $ex){
+        mk('Logging')->log('Payment', 'Report transaction update', 'Error'.n.$ex->getMessage().n.'in '.$ex->getFile().'('.$ex->getLine().')'.n.$ex->getTraceAsString(), false, true);
+      }
+      
+    }
+    
+  }
+  
+  public function get_is_claimed()
+  {
+    
+    return $this->method->get() !== null &&
+      $this->status->get() === 'UNCONFIRMED';
+    
+  }
+  
+  public function get_is_expired()
+  {
+    
+    $status = $this->status->get('string');
+    if($status === 'EXPIRED')
+      return true;
+    
+    if($status === 'UNCONFIRMED'){
+      
+      $created = strtotime($this->dt_created->get('string'));
+      
+      if($created+self::EXPIRE_AFTER < time())
+      {
+        
+        $this->status->set('EXPIRED');
+        $this->save();
+        $this->report();
+        return true;
+        
+      }
+      
+    }
+    
+    return false;
+    
+  }
+  
+  public function get_is_status_final(){
+    return in_array($this->status->get(), array('SUCCESS', 'EXPIRED', 'CANCELLED'));
+  }
+  
+  public function get_is_permanently_failed(){
+    return $this->is_status_final->get('boolean') && $this->status->get('string') !== 'SUCCESS';
   }
   
 }

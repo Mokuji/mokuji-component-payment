@@ -16,6 +16,30 @@ class PayPalHandler extends BaseHandler
   //The only type available for PayPal.
   const TYPE_PAYPAL = 1;
   
+  protected static
+    $CHECKOUT_STATUSSES = array(
+      'PaymentActionNotInitiated' => 'OPEN',
+      'PaymentActionInProgress' => 'OPEN',
+      'PaymentActionFailed' => 'FAILED',
+      'PaymentActionCompleted' => 'SUCCESS'
+    ),
+    $PAYMENT_STATUSSES = array(
+      'Completed' => 'SUCCESS',
+      'Canceled-Reversal' => 'SUCCESS',
+      'Denied' => 'FAILED',
+      'Expired' => 'EXPIRED',
+      'Failed' => 'FAILED',
+      'In-Progress' => 'OPEN',
+      'None' => 'OPEN',
+      'Partially-Refunded' => 'OPEN',
+      'Pending' => 'OPEN',
+      'Refunded' => 'CANCELLED',
+      'Reversed' => 'CANCELLED',
+      'Processed' => 'OPEN',
+      'Voided' => 'CANCELLED',
+      'Completed-Funds-Held' => 'SUCCESS'
+    );
+  
   /**
    * Gets a new PayPal payment method handler instance based on the provided type or the type setting.
    * @param integer $type Optional type constant identifying the type of handler.
@@ -72,6 +96,7 @@ class PayPalHandler extends BaseHandler
         ->otherwise(-1)
         ->get('integer'),
       
+      //Express Checkout
       'ec' => array(
         
         'user' => mk('Config')
@@ -98,19 +123,7 @@ class PayPalHandler extends BaseHandler
           ->otherwise(true)
           ->get('boolean')
         
-      )/*,
-      
-      'wpp' => array(
-        
-        'business' => mk('Config')
-          ->user('mokuji_payment_paypal_wpp_business')
-          ->get('string'),
-        'sandbox' => mk('Config')
-          ->user('mokuji_payment_paypal_wpp_sandbox')
-          ->otherwise(true)
-          ->get('boolean')
-        
-      )*/
+      )
       
     ));
     
@@ -123,6 +136,12 @@ class PayPalHandler extends BaseHandler
   protected $config;
   
   /**
+   * The title used in log entries.
+   * @var string
+   */
+  protected $title;
+  
+  /**
    * Constructs a new instance based on the PayPal settings provided.
    * @param \depencies\Data $config Specific PayPal settings.
    */
@@ -130,6 +149,7 @@ class PayPalHandler extends BaseHandler
   {
     
     $this->config = $config;
+    $this->title = $this->config->ec->sandbox->get('boolean') ? 'PayPal Sandbox' : 'PayPal';
     
   }
   
@@ -210,7 +230,19 @@ class PayPalHandler extends BaseHandler
   public function transaction_callback($post_data)
   {
     
-    die('Help :['.br.'I don\'t know what to do!');
+    $post_data = Data($post_data);
+    
+    $details = $this->get_express_checkout_details($post_data->token);
+    $tx = $details['model'];
+    
+    if($details['response']['CHECKOUTSTATUS'] === 'PaymentActionNotInitiated')
+      $this->do_express_checkout_payment($tx);
+    
+    mk('Logging')->log('Payment', $this->title, 'TX callback completed '.$tx->transaction_reference.' = '.$tx->status);
+    
+    $tx->report();
+    
+    return $details['model'];
     
   }
   
@@ -230,11 +262,13 @@ class PayPalHandler extends BaseHandler
     
     $response = $this->api_call(array(
       'METHOD' => 'SetExpressCheckout',
-      'RETURNURL' => url('/?action=payment/paypal_return&tx='.$tx->transaction_reference, true)->output,
-      'CANCELURL' => url('/?action=payment/paypal_return&tx='.$tx->transaction_reference, true)->output,
+      'RETURNURL' => (string)url('/?action=payment/paypal_express_checkout_return&tx='.$tx->transaction_reference, true),
+      'CANCELURL' => (string)url('/?action=payment/paypal_express_checkout_return&tx='.$tx->transaction_reference, true),
       'PAYMENTREQUEST_0_PAYMENTACTION' => 'SALE',
+      'PAYMENTREQUEST_0_CURRENCYCODE' => $tx->currency->get('string'),
       'PAYMENTREQUEST_0_AMT' => number_format($tx->total_price->get(), 2),
-      'PAYMENTREQUEST_0_CURRENCYCODE' => $tx->currency,
+      'PAYMENTREQUEST_0_ITEMAMT' => number_format($tx->total_price->get(), 2),
+      'PAYMENTREQUEST_0_INVNUM' => $tx->transaction_reference->get('string'),
       'L_PAYMENTREQUEST_0_NAME0' => $this->config->ec->description->get('string'),
       'L_PAYMENTREQUEST_0_AMT0' => number_format($tx->total_price->get(), 2),
       'L_PAYMENTREQUEST_0_QTY0' => '1',
@@ -243,6 +277,8 @@ class PayPalHandler extends BaseHandler
     
     $tx->entry_code->set($response['TOKEN']);
     $tx->save();
+    
+    mk('Logging')->log('Payment', $this->title, 'Initialized express checkout '.$tx->transaction_reference);
     
     header('Location: '. 
       ($this->config->ec->sandbox->get('boolean') ?
@@ -262,13 +298,6 @@ class PayPalHandler extends BaseHandler
     
     raw($token);
     
-    $statusses = array(
-      'PaymentActionNotInitiated' => 'OPEN',
-      'PaymentActionInProgress' => 'OPEN',
-      'PaymentActionFailed' => 'FAILED',
-      'PaymentActionCompleted' => 'SUCCESS'
-    );
-    
     $response = $this->api_call(array(
       'METHOD' => 'GetExpressCheckoutDetails',
       'TOKEN' => $token
@@ -278,15 +307,25 @@ class PayPalHandler extends BaseHandler
       ->where('entry_code', $token)
       ->execute_single();
     
+    $dr = Data($response);
+    
+    //Fallback would be FAILED.
+    $status = array_key_exists($response['CHECKOUTSTATUS'], self::$CHECKOUT_STATUSSES) ?
+      self::$CHECKOUT_STATUSSES[$response['CHECKOUTSTATUS']] : 'FAILED';
+    
     $tx->merge(array(
-      'status' => $statusses[$response['CHECKOUTSTATUS']],
+      'status' => $status === 'SUCCESS' ? $tx->status->get() : $status,
       'dt_status_changed' => date('Y-m-d H:i:s'),
+      'transaction_id_remote' => isset($response['PAYMENTREQUESTINFO_0_TRANSACTIONID']) ? $response['PAYMENTREQUESTINFO_0_TRANSACTIONID'] : null,
       'consumer_name' => $response['FIRSTNAME'].' '.$response['LASTNAME'],
       'consumer_email' => $response['EMAIL'],
-      'consumer_payerid' => $response['PAYERID']
+      'consumer_payerid' => $response['PAYERID'],
+      'error_information' => "{$dr['CHECKOUTSTATUS']}: {$dr['PAYMENTREQUESTINFO_0_SHORTMESSAGE']} {$dr['PAYMENTREQUESTINFO_0_LONGMESSAGE']} (ErrorNR {$dr['PAYMENTREQUESTINFO_0_ERRORCODE']})"
     ));
     
     $tx->save();
+    
+    mk('Logging')->log('Payment', $this->title, 'Got express checkout details '.$tx->transaction_reference);
     
     //Be nice to people, providing the model instance too.
     return array(
@@ -304,39 +343,83 @@ class PayPalHandler extends BaseHandler
       'TOKEN' => $tx->entry_code->get('string'),
       'PAYERID' => $tx->consumer_payerid->get('string'),
       'PAYMENTREQUEST_0_PAYMENTACTION' => 'SALE',
+      'PAYMENTREQUEST_0_ITEMAMT' => number_format($tx->total_price->get(), 2),
       'PAYMENTREQUEST_0_AMT' => number_format($tx->total_price->get(), 2),
-      'PAYMENTREQUEST_0_CURRENCYCODE' => $tx->currency->get('string')
+      'PAYMENTREQUEST_0_CURRENCYCODE' => $tx->currency->get('string'),
+      'PAYMENTREQUEST_0_INVNUM' => $tx->transaction_reference->get('string')
     ));
     
-    $statusses = array(
-      'Completed' => 'SUCCESS',
-      'Canceled-Reversal' => 'SUCCESS',
-      'Denied' => 'FAILED',
-      'Expired' => 'EXPIRED',
-      'Failed' => 'FAILED',
-      'In-Progress' => 'OPEN',
-      'None' => 'OPEN',
-      'Partially-Refunded' => 'OPEN',
-      'Pending' => 'OPEN',
-      'Refunded' => 'CANCELLED',
-      'Reversed' => 'CANCELLED',
-      'Processed' => 'OPEN',
-      'Voided' => 'CANCELLED',
-      'Completed-Funds-Held' => 'SUCCESS'
-    );
+    //Fallback would be FAILED.
+    $status = array_key_exists($response['PAYMENTINFO_0_PAYMENTSTATUS'], self::$PAYMENT_STATUSSES) ?
+      self::$PAYMENT_STATUSSES[$response['PAYMENTINFO_0_PAYMENTSTATUS']] : 'FAILED';
     
     $tx->merge(array(
-      'status' => $statusses[$response['PAYMENTINFO_0_PAYMENTSTATUS']],
+      'dt_transaction_local' => date('Y-m-d H:i:s'),
+      'dt_transaction_remote' => date('Y-m-d H:i:s', strtotime($response['PAYMENTINFO_0_ORDERTIME'])),
+      'status' => $status,
       'dt_status_changed' => date('Y-m-d H:i:s'),
-      'error_information' => "{$response['PAYMENTINFO_0_PAYMENTSTATUS']} | {$response['PAYMENTINFO_0_PENDINGREASON']} | {$response['PAYMENTINFO_0_ERRORCODE']}"
+      'transaction_id_remote' => $response['PAYMENTINFO_0_TRANSACTIONID'],
+      'error_information' => "{$response['PAYMENTINFO_0_PAYMENTSTATUS']}: {$response['PAYMENTINFO_0_PENDINGREASON']} (ErrorNR {$response['PAYMENTINFO_0_ERRORCODE']})"
     ));
+    
+    //Include the confirmed amount.
+    if($tx->status->get('string') === 'SUCCESS')
+      $tx->confirmed_amount->set($tx->total_price->get());
     
     $tx->save();
     
-    trace($response);
-    exit;
+    mk('Logging')->log('Payment', $this->title, 'Completed express checkout '.$tx->transaction_reference.' = '.$tx->status);
     
-    return $tx;
+    return true;
+    
+  }
+  
+  /**
+   * Attempts to update the status of the transaction.
+   * Note: Errors will throw an exception, but if updating was not required or not supported, FALSE will be returned.
+   * @param  Transactions $tx The transaction to update the status for.
+   * @return boolean Whether or not the status was updated.
+   */
+  public function update_status(Transactions $tx)
+  {
+    
+    //If this TX has a status that doesn't need updating.
+    if($tx->is_status_final->get('boolean') === true)
+      return false;
+    
+    //If we do not have a transaction ID (yet) to refresh with.
+    if($tx->transaction_id_remote->is_empty())
+      return false;
+    
+    $response = $this->api_call(array(
+      'METHOD' => 'GetTransactionDetails',
+      'TRANSACTIONID' => $tx->transaction_id_remote->get('string')
+    ));
+    
+    $old_status = $tx->status->get();
+    $new_status = self::$PAYMENT_STATUSSES[$response['PAYMENTSTATUS']];
+    
+    $tx->merge(array(
+      'status' => $new_status,
+      'transaction_id_remote' => $response['TRANSACTIONID'],
+      'error_information' => "{$response['PAYMENTSTATUS']}: {$response['PENDINGREASON']} (Reason {$response['REASONCODE']})"
+    ));
+    
+    //Only update timestamp if the status is actually different.
+    if($old_status !== $new_status)
+      $tx->merge(array('dt_status_changed' => date('Y-m-d H:i:s')));
+    
+    //Include the confirmed amount.
+    if($tx->status->get('string') === 'SUCCESS')
+      $tx->confirmed_amount->set($tx->total_price->get());
+    
+    $tx->save();
+    
+    mk('Logging')->log('Payment', $this->title, 'Updated transaction '.$tx->transaction_reference.' = '.$tx->status);
+    
+    $tx->report();
+    
+    return $old_status !== $new_status;
     
   }
   
@@ -355,34 +438,16 @@ class PayPalHandler extends BaseHandler
     ));
     
     //Curl to the server.
-    $response = mk('Component')->helpers('payment')->curl('POST', $url, $data);
-    $parsed = mk('Component')->helpers('payment')->parse_query($response);
+    $response = curl_call($url, $data); #TODO: use curl_call()
+    $parsed = mk('Component')->helpers('payment')->parse_query($response['data']);
     
     if($parsed['ACK'] !== 'Success'){
-      trace($data, $parsed);
+      trace($data, $parsed, $response);
       throw new \exception\Programmer('Error with API call.');
     }
     
     return $parsed;
     
   }
-  
-  // /**
-  //  * The path to the iDeal payment method folder.
-  //  * @return string Absolute path to the iDeal payment method folder.
-  //  */
-  // public static function get_ideal_path()
-  // {
-  //   return PATH_COMPONENTS.DS.'payment'.DS.'methods'.DS.'ideal';
-  // }
-  
-  // /**
-  //  * The URL to the iDeal payment method folder.
-  //  * @return string Absolute URL to the iDeal payment method folder.
-  //  */
-  // public static function get_ideal_url()
-  // {
-  //   return URL_COMPONENTS.'payment/methods/ideal/';
-  // }
   
 }

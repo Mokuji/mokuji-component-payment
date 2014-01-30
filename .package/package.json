@@ -5,6 +5,24 @@
   "dbUpdates": true,
   "versions": [
     {
+      "version": "0.0.8-alpha",
+      "date": "2014-01-29",
+      "description": "Added report function to transactions for integration purposes.",
+      "changes": []
+    },
+    {
+      "version": "0.0.7-alpha",
+      "date": "2014-01-28",
+      "description": "Track expiration of generated transactions.",
+      "changes": []
+    },
+    {
+      "version": "0.0.6-alpha",
+      "date": "2014-01-27",
+      "description": "Added missing field for PayPal Express Checkout.",
+      "changes": []
+    },
+    {
       "version": "0.0.5-alpha",
       "date": "2013-07-31",
       "description": "Added missing field for PayPal Express Checkout.",

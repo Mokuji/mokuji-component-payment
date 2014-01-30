@@ -91,25 +91,7 @@ $(function(){
     $('.ctrlHolder[data-paypal="'+handler+'"]').show();
   });
   
-  $('#payment_configuration_form select.paypal-handler').trigger('change');
+  $('#payment_configuration_form select').trigger('change');
   
 });
 </script>
-
-<?php
-
-mk('Component')->load('payment', 'methods\\ideal\\IdealBaseHandler', false);
-mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
-$tx_model = mk('Sql')->model('payment', 'Transactions');
-
-$tx = $tx_model::create_transaction(1.25);
-
-//iDeal
-$handler = methods\ideal\IdealBaseHandler::get_handler();
-echo $handler->transaction_start_button($tx, 'http://localhost/mokuji/admin/index.php?view=cms/settings');
-
-//PayPal
-$handler = methods\paypal\PayPalHandler::get_handler();
-echo $handler->transaction_start_button($tx, 'http://localhost/mokuji/admin/index.php?view=cms/settings');
-
-?>

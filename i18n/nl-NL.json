@@ -1,0 +1,33 @@
+{
+  "SETTINGS_VIEW_TITLE": "Betalingsmethoden",
+  "SETTINGS_VIEW_DESCRIPTION": "Hier kunnen de verschillende betalingsmethoden worden ingesteld die je wilt aanbieden.",
+  
+  "STATUS_SUCCESS": "Succes",
+  "STATUS_CANCELLED": "Afgebroken",
+  "STATUS_EXPIRED": "Verlopen",
+  "STATUS_OPEN": "Open",
+  "STATUS_FAILED": "Mislukt",
+  "STATUS_UNCONFIRMED": "Onbevestigd",
+  
+  "STATUS_SUCCESS_DETAILS": "De transactie was succesvol.",
+  "STATUS_CANCELLED_DETAILS": "De transactie was door de klant afgebroken.",
+  "STATUS_EXPIRED_DETAILS": "De transactie was verlopen voor de klant deze volbracht had.",
+  "STATUS_OPEN_DETAILS": "De transactie is door de klant afgerond, maar hun bank heeft de betaling nog voltooid.",
+  "STATUS_FAILED_DETAILS": "De transactie mislukte met de foutmelding: {0}",
+  "STATUS_UNCONFIRMED_DETAILS": "De transactie is aangemaakt, maar de klant heeft de betalingsstapen nog niet afgerond.",
+  
+  "METHOD_IDEAL": "iDeal",
+  "METHOD_PAYPAL": "PayPal",
+  
+  "Disabled": "Uitgeschakeld",
+  "Merchant ID": "Merchant ID",
+  "Merchant Sub ID": "Merchant Sub ID",
+  "Security key": "Beveiligingssleutel",
+  "Security key version": "Beveiligingssleutel versie",
+  "Test mode": "Testmodus",
+  "User": "Gebruiker",
+  "Password": "Wachtwoord",
+  "Signature": "Handtekening",
+  "Description": "Omschrijving",
+  "Sandbox": "Sandbox"
+}

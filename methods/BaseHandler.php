@@ -2,6 +2,8 @@
 
 mk('Sql')->model('payment', 'Transactions');
 use \components\payment\models\Transactions;
+use \components\payment\methods\ideal\IdealBaseHandler;
+use \components\payment\methods\paypal\PayPalHandler;
 
 /**
  * A base class that serves as a factory for the different available payment method handlers as well
@@ -47,5 +49,30 @@ abstract class BaseHandler
    * @return \components\payment\models\Transactions $tx The transaction that has been updated.
    */
   abstract public function transaction_callback($post_data);
+  
+  /**
+   * Attempts to update the status of the transaction.
+   * Note: Errors will throw an exception, but if updating was not required or not supported, FALSE will be returned.
+   * @param  Transactions $tx The transaction to update the status for.
+   * @return boolean Whether or not the status was updated.
+   */
+  abstract public function update_status(Transactions $tx);
+  
+  /**
+   * Gets a new payment method handler instance based on the provided transaction model.
+   * @param  Transactions $tx The transaction model to find the handler for.
+   * @return BaseHandler?     The handler associated with the model, or NULL if no handler is defined in the model.
+   */
+  public static function find_handler(Transactions $tx)
+  {
+    
+    switch($tx->method->get()){
+      case 'IDEAL': return IdealBaseHandler::get_handler($tx->handler->get('int'));
+      case 'PAYPAL': return PayPalHandler::get_handler($tx->handler->get('int'));
+      case null: return null;
+      default: throw new \exception\Programmer('Unknown payment method '.$tx->method);
+    }
+    
+  }
   
 }

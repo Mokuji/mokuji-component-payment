@@ -135,6 +135,14 @@ abstract class IdealBaseHandler extends BaseHandler
   // abstract public function transaction_callback($post_data);
   
   /**
+   * Attempts to update the status of the transaction.
+   * Note: Errors will throw an exception, but if updating was not required or not supported, FALSE will be returned.
+   * @param  Transactions $tx The transaction to update the status for.
+   * @return boolean Whether or not the status was updated.
+   */
+  // abstract public function update_status(Transactions $tx);
+  
+  /**
    * The path to the iDeal payment method folder.
    * @return string Absolute path to the iDeal payment method folder.
    */

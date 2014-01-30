@@ -13,8 +13,65 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
       '0.0.1-alpha' => '0.0.2-alpha',
       '0.0.2-alpha' => '0.0.3-alpha',
       '0.0.3-alpha' => '0.0.4-alpha',
-      '0.0.4-alpha' => '0.0.5-alpha'
+      '0.0.4-alpha' => '0.0.5-alpha',
+      '0.0.5-alpha' => '0.0.6-alpha',
+      '0.0.6-alpha' => '0.0.7-alpha',
+      '0.0.7-alpha' => '0.0.8-alpha'
     );
+  
+  protected function update_to_0_0_8_alpha($current_version, $forced)
+  {
+    
+    try{
+      
+      mk('Sql')->query("
+        ALTER TABLE `#__payment_transactions`
+          ADD COLUMN `report_helper` varchar(255) NULL DEFAULT NULL
+      ");
+      
+    }catch(\exception\Sql $ex){
+      //When it's not forced, this is a problem.
+      //But when forcing, ignore this.
+      if(!$forced) throw $ex;
+    }
+    
+  }
+  
+  protected function update_to_0_0_7_alpha($current_version, $forced)
+  {
+    
+    try{
+      
+      mk('Sql')->query("
+        ALTER TABLE `#__payment_transactions`
+          ADD COLUMN `dt_created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      ");
+      
+    }catch(\exception\Sql $ex){
+      //When it's not forced, this is a problem.
+      //But when forcing, ignore this.
+      if(!$forced) throw $ex;
+    }
+    
+  }
+  
+  protected function update_to_0_0_6_alpha($current_version, $forced)
+  {
+    
+    try{
+      
+      mk('Sql')->query("
+        ALTER TABLE `#__payment_transactions`
+          ADD COLUMN `transaction_id_remote` varchar(255) NULL DEFAULT NULL AFTER `dt_status_changed`
+      ");
+      
+    }catch(\exception\Sql $ex){
+      //When it's not forced, this is a problem.
+      //But when forcing, ignore this.
+      if(!$forced) throw $ex;
+    }
+    
+  }
   
   protected function update_to_0_0_5_alpha($current_version, $forced)
   {

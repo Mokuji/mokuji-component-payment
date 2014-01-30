@@ -1,0 +1,22 @@
+{
+  "SETTINGS_VIEW_TITLE": "Payment methods",
+  "SETTINGS_VIEW_DESCRIPTION": "Here you can configure the different payment methods you want to offer.",
+  
+  "STATUS_SUCCESS": "Success",
+  "STATUS_CANCELLED": "Canceled",
+  "STATUS_EXPIRED": "Expired",
+  "STATUS_OPEN": "Open",
+  "STATUS_FAILED": "Failed",
+  "STATUS_UNCONFIRMED": "Unconfirmed",
+  
+  "STATUS_SUCCESS_DETAILS": "The transaction was successful.",
+  "STATUS_CANCELLED_DETAILS": "The transaction was canceled by the customer.",
+  "STATUS_EXPIRED_DETAILS": "The transaction expired before the customer completed it.",
+  "STATUS_OPEN_DETAILS": "The transaction was completed by the customer, but their bank has not yet cleared the funds.",
+  "STATUS_FAILED_DETAILS": "The transaction failed with error message: {0}",
+  "STATUS_UNCONFIRMED_DETAILS": "The transaction has been created, but the customer has not yet proceeded with the payment steps.",
+  
+  "METHOD_IDEAL": "iDeal",
+  "METHOD_PAYPAL": "PayPal"
+  
+}
