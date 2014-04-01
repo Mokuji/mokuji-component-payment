@@ -120,7 +120,10 @@ class PayPalHandler extends BaseHandler
         
         'sandbox' => mk('Config')
           ->user('mokuji_payment_paypal_ec_sandbox')
-          ->otherwise(true)
+          ->is('empty', function($pair){
+            if($pair->get() === null)
+              $pair->set(true);
+          })
           ->get('boolean')
         
       )
@@ -173,7 +176,7 @@ class PayPalHandler extends BaseHandler
       throw new \exception\InvalidArgument("The total price is a required field.");
     
     //Store the location where we should return.
-    mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->set($return_url);
+    mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->set((string)$return_url);
     
     return Data(array(
       'action' => url('/', true),
