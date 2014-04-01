@@ -5,6 +5,12 @@
   "dbUpdates": true,
   "versions": [
     {
+      "version": "0.1.0-beta",
+      "date": "2014-04-01",
+      "description": "Moved component to beta state.",
+      "changes": []
+    },
+    {
       "version": "0.0.8-alpha",
       "date": "2014-01-29",
       "description": "Added report function to transactions for integration purposes.",

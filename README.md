@@ -1,12 +1,49 @@
-# Component: `payment`
-Version 0.0.8 Alpha
+# Mokuji component: `payment`
 
-_A payment handling component used for easy integration of payment systems into your components._
+* **Version:** 0.1.0 Beta
+* **License:** GPLv3 (see [`LICENSE`](LICENSE))
 
-Supports the currencies:
+A **quick to implement** Mokuji component providing **multiple payment methods**.
+
+Key features:
+
+* Automatic transaction administration.
+* One API for all payment methods. No need to learn platform specifics.
+* Actively maintained and tested in real-life business applications.
+
+New payment methods are added depending on demand for them.
+
+## Current support
+
+**Currencies:**
+
 * Euro
 
-Supports the payment methods:
+**Payment methods:**
+
 * PayPal
+  - Express Checkout
 * iDeal
   - Rabobank OmniKassa
+
+## Maintainers
+
+* Robin van Boven - https://github.com/Beanow
+* Bart Roorda - https://github.com/2278766732
+
+[Contributors list](https://github.com/Mokuji/mokuji-component-payment/graphs/contributors)
+
+## How to contribute
+
+To contribute, feel free to [submit issues](https://github.com/Mokuji/mokuji-component-payment/issues/new)
+on the GitHub repository and the maintainers will respond to you.
+
+If you want to submit code, please use the GitHub pull requests feature,
+using the `develop` branch as the merge target.
+
+## Which core problems does this component solve?
+
+* Implementing payment methods take time as they require much research and coding every time.
+* One-off implementations are rarely patched for bugs or security issues.
+* Payment method implementations often do not re-use functionality they have in common.
+* Maintaining a solid transaction record is challenging.
