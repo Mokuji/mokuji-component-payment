@@ -60,6 +60,9 @@ class Transactions extends \dependencies\BaseModel
   
   /**
    * Binds the transaction to a specific payment method and handler.
+   * 
+   * Note: This should be done as soon as the remote server of the payment method registers
+   *   the generated transaction_reference.
    * @param  string $method
    * @param  int    $handler
    * @return $this
