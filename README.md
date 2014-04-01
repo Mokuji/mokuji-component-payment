@@ -1,6 +1,6 @@
 # Mokuji component: `payment`
 
-* **Version:** 0.0.8 Alpha
+* **Version:** 0.1.0 Beta
 * **License:** GPLv3 (see [`LICENSE`](LICENSE))
 
 A **quick to implement** Mokuji component for **multiple payment methods**.
