@@ -99,7 +99,10 @@ abstract class IdealBaseHandler extends BaseHandler
           
           'test_mode' => mk('Config')
             ->user('mokuji_payment_ideal_rabobank_omnikassa_test_mode')
-            ->otherwise(true)
+            ->is('empty', function($pair){
+              if($pair->get() === null)
+                $pair->set(true);
+            })
             ->get('boolean')
           
         )

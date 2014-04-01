@@ -164,20 +164,26 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     $response = $this->lib->validate();
     unset($_POST);
     
-    if($response === false)
+    if($response === false){
+      mk('Logging')->log('Payment', $this->title, 'Response was invalid.');
       return false;
+    }
     
     $tx = mk('Sql')
       ->table('payment', 'Transactions')
       ->where('transaction_reference', "'{$response['transaction_reference']}'")
       ->execute_single();
     
-    if($tx->is_empty())
+    if($tx->is_empty()){
+      mk('Logging')->log('Payment', $this->title, 'Transaction did not exist: '.$response['transaction_reference']);
       return false;
+    }
     
     #TODO: What if you paid the same transaction with two payment methods? At least log it.
-    if(!$tx->claim('IDEAL', self::TYPE_RABOBANK_OMNIKASSA))
+    if(!$tx->claim('IDEAL', self::TYPE_RABOBANK_OMNIKASSA)){
+      mk('Logging')->log('Payment', $this->title, 'Could not claim.');
       return false;
+    }
     
     $codes = array(
       '00' => 'SUCCESS',

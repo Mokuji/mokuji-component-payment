@@ -30,7 +30,7 @@
     <input type="text" name="mokuji_payment_ideal_rabobank_omnikassa_security_key_version[default]" value="<?php echo $omnikassa->security_key_version; ?>" />
     
     <label>
-      <input type="checkbox" name="mokuji_payment_ideal_rabobank_omnikassa_test_mode[default]" value="1"<?php $omnikassa->test_mode->is(true, function(){ echo ' checked="checked"'; }); ?> />
+      <input type="checkbox" name="mokuji_payment_ideal_rabobank_omnikassa_test_mode[default]" value="1"<?php $omnikassa->test_mode->is('true', function(){ echo ' checked="checked"'; }); ?> />
       <?php __($names->component, 'Test mode'); ?>
     </label>
     
@@ -62,7 +62,7 @@
     <input type="text" name="mokuji_payment_paypal_ec_description[default]" value="<?php echo $ec->description; ?>" />
     
     <label>
-      <input type="checkbox" name="mokuji_payment_paypal_ec_sandbox[default]" value="1"<?php $ec->sandbox->is(true, function(){ echo ' checked="checked"'; }); ?> />
+      <input type="checkbox" name="mokuji_payment_paypal_ec_sandbox[default]" value="1"<?php $ec->sandbox->is('true', function(){ echo ' checked="checked"'; }); ?> />
       <?php __($names->component, 'Sandbox'); ?>
     </label>
     
