@@ -86,7 +86,7 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
       'action' => URL_COMPONENTS.'payment/methods/ideal/RabobankOmniKassaStart.php',
       'method' => 'GET',
       'data' => array('tx' => $tx->transaction_reference)
-    );
+    ));
     
   }
   
@@ -147,7 +147,7 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     
     //Must claim at this point.
     if(!$tx->claim('IDEAL', IdealBaseHandler::TYPE_RABOBANK_OMNIKASSA)){
-      throw \exception\Error('This transaction was already claimed. Please complete the transaction or return to the checkout page.');
+      throw new \exception\Programmer('This transaction was already claimed. Please complete the transaction or return to the checkout page.');
     }
     
     //Add extra fields to the library.
@@ -288,10 +288,10 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
   
   /**
    * Do a couple of checks that we have to repeat.
-   * @param  Transaction $tx
+   * @param  Transactions $tx
    * @return void
    */
-  protected function validate_transaction(Transaction $tx)
+  protected function validate_transaction(Transactions $tx)
   {
     
     //Ensure the required fields are present.
