@@ -33,6 +33,7 @@ try{
   $form = $handler->generate_to_rabobank_form(mk('Data')->get->as_array());
 }catch(\Exception $ex){
   mk('Logging')->log('Payment', 'RabobankOmniKassaStart', 'Failed to start: '.$ex->getMessage());
+  mk('Logging')->log('Payment', 'RabobankOmniKassaStart', mk('Data')->get->dump());
   die($ex->getMessage());
 }
 

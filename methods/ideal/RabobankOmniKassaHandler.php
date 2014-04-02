@@ -147,7 +147,10 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     
     //Must claim at this point.
     if(!$tx->claim('IDEAL', IdealBaseHandler::TYPE_RABOBANK_OMNIKASSA)){
-      throw new \exception\Programmer('This transaction was already claimed. Please complete the transaction or return to the checkout page.');
+      throw new \exception\Programmer(
+        'This transaction was already claimed by %s. Please complete the transaction or return to the checkout page.',
+        strtolower($tx->method->get())
+      );
     }
     
     //Add extra fields to the library.
