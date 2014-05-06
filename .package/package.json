@@ -5,6 +5,12 @@
   "dbUpdates": true,
   "versions": [
     {
+      "version": "0.1.2-beta",
+      "date": "2014-04-28",
+      "description": "Fixed bug with test-mode setting not saving properly.",
+      "changes": []
+    },
+    {
       "version": "0.1.1-beta",
       "date": "2014-04-28",
       "description": "Fixed bug with switching payment methods during the payment process.",
