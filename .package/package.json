@@ -5,6 +5,12 @@
   "dbUpdates": true,
   "versions": [
     {
+      "version": "0.2.0-beta",
+      "date": "2014-05-06",
+      "description": "Added multiple account functionality.",
+      "changes": []
+    },
+    {
       "version": "0.1.2-beta",
       "date": "2014-04-28",
       "description": "Fixed bug with test-mode setting not saving properly.",

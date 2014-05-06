@@ -14,6 +14,27 @@ require_once(IdealBaseHandler::get_ideal_path().DS.'lib-omnikassa'.DS.'omnikassa
 class RabobankOmniKassaHandler extends IdealBaseHandler
 {
   
+  public static function tx_from_callback($request_data)
+  {
+    
+    $a = explode('|', $request_data['Data']);
+    $aData = array();
+    
+    foreach($a as $d)
+    {
+      list($k, $v) = explode('=', $d);
+      $aData[$k] = $v;
+    }
+    
+    return mk('Sql')->table('payment', 'Transactions')
+      ->where('transaction_reference', mk('Sql')->escape($aData['transactionReference']))
+      ->execute_single()
+      ->is('empty', function(){
+        throw new \exception\Unexpected("No valid transaction reference in Rabobank callback");
+      });
+    
+  }
+  
   /**
    * An instance of the OmniKassa class provided by the Rabobank library.
    * @var \OmniKassa

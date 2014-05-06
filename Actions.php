@@ -23,7 +23,7 @@ class Actions extends \dependencies\BaseComponent
     if($tx->is_empty())
       throw \exception\NotFound('No transaction with this reference.');
     
-    $handler = methods\paypal\PayPalHandler::get_handler();
+    $handler = methods\paypal\PayPalHandler::get_handler($tx->account);
     $handler->set_express_checkout($tx);
     exit;
     
@@ -32,8 +32,13 @@ class Actions extends \dependencies\BaseComponent
   protected function paypal_express_checkout_return($data)
   {
     
+    //Get the TX for now, just to find out which account we need for the handler.
+    $tx = mk('Sql')->table('payment', 'Transactions')
+      ->where('transaction_reference', "'".mk('Data')->get->tx."'")
+      ->execute_single();
+    
     mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
-    $handler = methods\paypal\PayPalHandler::get_handler();
+    $handler = methods\paypal\PayPalHandler::get_handler($tx->account);
     
     $tx = $handler->transaction_callback(mk('Data')->request);
     

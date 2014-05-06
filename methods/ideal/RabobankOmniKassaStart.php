@@ -24,9 +24,14 @@ $init = Initializer::get_instance()
   ->run_environment();
 
 //Get the handler.
-mk('Component')->load('payment', 'methods\\ideal\\IdealBaseHandler', false);
 use \components\payment\methods\ideal\IdealBaseHandler;
-$handler = IdealBaseHandler::get_handler(IdealBaseHandler::TYPE_RABOBANK_OMNIKASSA);
+
+//Get transaction.
+$tx = mk('Sql')->table('payment', 'Transactions')
+  ->where('transaction_reference', mk('Sql')->escape(mk('Data')->get->tx))
+  ->execute_single();
+
+$handler = IdealBaseHandler::get_handler($tx->account);
 
 //Show the ridiculous supposed-to-be-hidden-form that the Rabobank requires to start the transaction.
 try{

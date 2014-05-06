@@ -1,9 +1,7 @@
 <?php namespace components\payment\methods\paypal; if(!defined('TX')) die('No direct access.');
 
-mk('Sql')->model('payment', 'Transactions');
+use \components\payment\models\Accounts;
 use \components\payment\models\Transactions;
-
-mk('Component')->load('payment', 'methods\\BaseHandler', false);
 use \components\payment\methods\BaseHandler;
 
 /**
@@ -42,41 +40,39 @@ class PayPalHandler extends BaseHandler
   
   /**
    * Gets a new PayPal payment method handler instance based on the provided type or the type setting.
-   * @param integer $type Optional type constant identifying the type of handler.
-   *                      Default: the mokuji_payment_ideal_handler configuration value.
+   * @param Accounts $account The account to get the associated handler of. Default: the first account.
    * @return BaseHandler  The requested type of handler.
    */
-  public static function get_handler($type=null)
+  public static function get_handler(Accounts $account=null)
   {
     
-    raw($type);
-    
-    $config = self::get_config();
-    
-    //When not set, retrieve the default.
-    if($type === null){
-      $type = $config->handler->get('integer');
+    //Default account?
+    if(!$account || $account->is_empty()){
+      
+      //Get the "Main account" (lowest ID).
+      $account = mk('Sql')->table('payment', 'Accounts')
+        ->order('id')
+        ->execute_single();
+      
     }
     
-    //Require integer.
-    if(!is_integer($type)){
-      throw new \exception\InvalidArgument(
-        'The $type variable needs to be an integer, "%s" provided. Please use the available constants.',
-        gettype($type)
-      );
-    }
+    //Disabled?
+    if(!$account->is_enabled->get('boolean'))
+      throw new \exception\Programmer('Paypal has not been configured or is disabled.');
+    
+    $config = self::get_config($account);
     
     //Initialize the requested type.
-    switch($type){
+    switch($account->handler->get('int')){
       
       case self::TYPE_PAYPAL:
         return new PaypalHandler($config);
       
       default:
-        throw new \exception\InvalidArgument('Provided type "%s" is not supported. Please use the available constants.', $type);
-      
-      case -1:
-        throw new \exception\Programmer('Paypal has not been configured or is disabled.');
+        throw new \exception\InvalidArgument(
+          'Provided type "%s" is not supported. Please use the available constants.',
+          $account->handler->get('int')
+        );
       
     }
     
@@ -84,48 +80,23 @@ class PayPalHandler extends BaseHandler
   
   /**
    * Gets all configuration values related to PayPal.
+   * @param Accounts $account The account to get the config of.
    * @return \dependencies\Data An associative data array of configuration values.
    */
-  public static function get_config()
+  public static function get_config(Accounts $account)
   {
     
     return Data(array(
       
-      'handler' => mk('Config')
-        ->user('mokuji_payment_paypal_handler')
-        ->otherwise(-1)
-        ->get('integer'),
+      'handler' => $account->handler,
       
       //Express Checkout
       'ec' => array(
-        
-        'user' => mk('Config')
-          ->user('mokuji_payment_paypal_ec_user')
-          ->otherwise('sdk-three_api1.sdk.com')
-          ->get('string'),
-        
-        'pwd' => mk('Config')
-          ->user('mokuji_payment_paypal_ec_pwd')
-          ->otherwise('QFZCWN5HZM8VBG7Q')
-          ->get('string'),
-        
-        'signature' => mk('Config')
-          ->user('mokuji_payment_paypal_ec_signature')
-          ->otherwise('A-IzJhZZjhg29XQ2qnhapuwxIDzyAZQ92FRP5dqBzVesOkzbdUONzmOU')
-          ->get('string'),
-        
-        'description' => mk('Config')
-          ->user('mokuji_payment_paypal_ec_description')
-          ->get('string'),
-        
-        'sandbox' => mk('Config')
-          ->user('mokuji_payment_paypal_ec_sandbox')
-          ->is('empty', function($pair){
-            if($pair->get() === null)
-              $pair->set(true);
-          })
-          ->get('boolean')
-        
+        'user' => $account->paypal->settings_object->user,
+        'pwd' => $account->paypal->settings_object->pwd,
+        'signature' => $account->paypal->settings_object->signature,
+        'description' => $account->paypal->settings_object->description,
+        'sandbox' => $account->paypal->is_test_mode
       )
       
     ));

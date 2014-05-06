@@ -29,5 +29,8 @@
   "Password": "Wachtwoord",
   "Signature": "Handtekening",
   "Description": "Omschrijving",
-  "Sandbox": "Sandbox"
+  "Sandbox": "Sandbox",
+  
+  "Main account": "Hoofdaccount"
+  
 }

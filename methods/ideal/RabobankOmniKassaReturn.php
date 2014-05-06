@@ -23,10 +23,13 @@ $init = Initializer::get_instance()
   ->set_environment(Environments::MINIMAL)
   ->run_environment();
 
+//Get transaction.
+use \components\payment\methods\ideal\RabobankOmniKassaHandler;
+$tx = RabobankOmniKassaHandler::tx_from_callback(mk('Data')->post->as_array());
+
 //Get the handler.
-mk('Component')->load('payment', 'methods\\ideal\\IdealBaseHandler', false);
 use \components\payment\methods\ideal\IdealBaseHandler;
-$handler = IdealBaseHandler::get_handler(IdealBaseHandler::TYPE_RABOBANK_OMNIKASSA);
+$handler = IdealBaseHandler::get_handler($tx->account);
 
 //Process data.
 $tx = $handler->transaction_callback(mk('Data')->post->as_array());
