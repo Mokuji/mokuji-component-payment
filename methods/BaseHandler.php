@@ -66,8 +66,8 @@ abstract class BaseHandler
   {
     
     switch($tx->method->get()){
-      case 'IDEAL': return IdealBaseHandler::get_handler($tx->account);
-      case 'PAYPAL': return PayPalHandler::get_handler($tx->account);
+      case 'IDEAL': return IdealBaseHandler::get_handler($tx->account->get());
+      case 'PAYPAL': return PayPalHandler::get_handler($tx->account->get());
       case null: return null;
       default: throw new \exception\Programmer('Unknown payment method '.$tx->method);
     }
@@ -95,12 +95,14 @@ abstract class BaseHandler
     $handlers = array();
     
     //iDeal?
-    if($account->ideal->is_enabled->get('boolean'))
-      $handlers['IDEAL'] = return IdealBaseHandler::get_handler($account);
+    if($account->ideal->is_enabled->get('boolean')){
+      $handlers['IDEAL'] = IdealBaseHandler::get_handler($account);
+    }
     
     //Paypal?
-    if($account->paypal->is_enabled->get('boolean'))
-      $handlers['PAYPAL'] = return PayPalHandler::get_handler($account);
+    if($account->paypal->is_enabled->get('boolean')){
+      $handlers['PAYPAL'] = PayPalHandler::get_handler($account);
+    }
     
     return $handlers;
     

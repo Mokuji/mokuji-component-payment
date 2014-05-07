@@ -29,11 +29,11 @@ $tx = RabobankOmniKassaHandler::tx_from_callback(mk('Data')->post->as_array());
 
 //Get the handler.
 use \components\payment\methods\ideal\IdealBaseHandler;
-$handler = IdealBaseHandler::get_handler($tx->account);
+$handler = IdealBaseHandler::get_handler($tx->account->get());
 
 //Process data.
 $tx = $handler->transaction_callback(mk('Data')->post->as_array());
-if($tx === false) exit;
+if($tx === false) { echo 'Something went wrong. The error has been logged. Try to refresh using F5 or CTRL+R.'; exit; }
 
 //Move to target URL.
 header('Location: '. mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->get());

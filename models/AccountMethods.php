@@ -13,7 +13,7 @@ class AccountMethods extends \dependencies\BaseModel
   public function get_settings_object()
   {
     
-    return Data(json_decode($this->settings->get('string')));
+    return Data(json_decode($this->settings->get('string'), true));
     
   }
   

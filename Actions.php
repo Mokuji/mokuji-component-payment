@@ -23,7 +23,7 @@ class Actions extends \dependencies\BaseComponent
     if($tx->is_empty())
       throw \exception\NotFound('No transaction with this reference.');
     
-    $handler = methods\paypal\PayPalHandler::get_handler($tx->account);
+    $handler = methods\paypal\PayPalHandler::get_handler($tx->account->get());
     $handler->set_express_checkout($tx);
     exit;
     
@@ -38,7 +38,7 @@ class Actions extends \dependencies\BaseComponent
       ->execute_single();
     
     mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
-    $handler = methods\paypal\PayPalHandler::get_handler($tx->account);
+    $handler = methods\paypal\PayPalHandler::get_handler($tx->account->get());
     
     $tx = $handler->transaction_callback(mk('Data')->request);
     

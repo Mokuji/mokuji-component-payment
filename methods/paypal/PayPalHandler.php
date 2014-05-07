@@ -57,13 +57,13 @@ class PayPalHandler extends BaseHandler
     }
     
     //Disabled?
-    if(!$account->is_enabled->get('boolean'))
+    if(!$account->paypal->is_enabled->get('boolean'))
       throw new \exception\Programmer('Paypal has not been configured or is disabled.');
     
     $config = self::get_config($account);
     
     //Initialize the requested type.
-    switch($account->handler->get('int')){
+    switch($config->handler->get('int')){
       
       case self::TYPE_PAYPAL:
         return new PaypalHandler($config);
@@ -88,7 +88,7 @@ class PayPalHandler extends BaseHandler
     
     return Data(array(
       
-      'handler' => $account->handler,
+      'handler' => $account->paypal->handler,
       
       //Express Checkout
       'ec' => array(
@@ -96,7 +96,7 @@ class PayPalHandler extends BaseHandler
         'pwd' => $account->paypal->settings_object->pwd,
         'signature' => $account->paypal->settings_object->signature,
         'description' => $account->paypal->settings_object->description,
-        'sandbox' => $account->paypal->is_test_mode
+        'sandbox' => $account->paypal->is_test_mode->get('boolean')
       )
       
     ));

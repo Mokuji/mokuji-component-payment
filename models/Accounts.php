@@ -15,7 +15,7 @@ class Accounts extends \dependencies\BaseModel
     
     return $this->table('AccountMethods')
       ->where('account_id', $this->id)
-      ->where('method', 'IDEAL')
+      ->where('method', "'IDEAL'")
       ->execute_single();
     
   }
@@ -25,7 +25,7 @@ class Accounts extends \dependencies\BaseModel
     
     return $this->table('AccountMethods')
       ->where('account_id', $this->id)
-      ->where('method', 'PAYPAL')
+      ->where('method', "'PAYPAL'")
       ->execute_single();
     
   }

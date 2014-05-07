@@ -34,14 +34,13 @@ abstract class IdealBaseHandler extends BaseHandler
     }
     
     //Disabled?
-    if(!$account->is_enabled->get('boolean'))
+    if(!$account->ideal->is_enabled->get('boolean'))
       throw new \exception\Programmer('No iDeal payment method has been configured or provided.');
     
     $config = self::get_config($account);
     
-    
     //Initialize the requested type.
-    switch($account->handler->get('int')){
+    switch($config->handler->get('int')){
       
       case self::TYPE_RABOBANK_OMNIKASSA:
         return new RabobankOmniKassaHandler($config);
@@ -66,7 +65,7 @@ abstract class IdealBaseHandler extends BaseHandler
     
     return Data(array(
       
-      'handler' => $account->handler,
+      'handler' => $account->ideal->handler,
       
       'rabobank' => array(
         
