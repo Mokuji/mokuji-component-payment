@@ -1,0 +1,18 @@
+<strong>Rabobank OmniKassa</strong>
+
+<label>Merchant ID</label>
+<input type="text" name="ideal[merchant_id]" value="<%= this.settings_object.merchant_id %>" />
+
+<label>Merchant Sub ID</label>
+<input type="text" name="ideal[merchant_sub_id]" value="<%= this.settings_object.merchant_sub_id %>" />
+
+<label>Security key</label>
+<input type="text" name="ideal[security_key]" value="<%= this.settings_object.security_key %>" />
+
+<label>Security key version</label>
+<input type="text" name="ideal[security_key_version]" value="<%= this.settings_object.security_key_version %>" />
+
+<label>
+  <input type="checkbox" name="ideal[is_test_mode]" value="1" <%= this.is_test_mode !== false ? 'checked="checked"' : '' %> />
+  Test mode
+</label>

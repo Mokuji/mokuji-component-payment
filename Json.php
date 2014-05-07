@@ -46,4 +46,17 @@ class Json extends \dependencies\BaseComponent
     
   }
   
+  protected function get_account($options, $sub_routes)
+  {
+    
+    return mk('Sql')->table('payment', 'Accounts')
+      ->order('id')
+      ->execute()
+      ->each(function($account){
+        $account->ideal->settings_object;
+        $account->paypal->settings_object;
+      });
+    
+  }
+  
 }
