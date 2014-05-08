@@ -35,8 +35,10 @@ jQuery(function($){
       //Bind events.
       this.el.on('click', '.payment-account', this.onAccountClick);
       this.el.on('click', '.edit-title', this.onTitleEdit);
+      this.el.on('click', '.add-account', this.onAddAccount);
       this.el.on('blur', '.account-title-editor input', this.onTitleEditorBlur);
       this.el.on('change', '.handler-selector', this.onHandlerChange);
+      this.el.on('click', '.delete-account', this.onDeleteAccount);
       
       //Do the main lookup for the accounts we've got at the moment.
       this.loadAccounts();
@@ -71,11 +73,52 @@ jQuery(function($){
         beforeSubmit: function(data, form){
           ensureBoolean(data, ['paypal', 'is_test_mode']);
           ensureBoolean(data, ['ideal', 'is_test_mode']);
+        },
+        success: function(data){
+          self.data[data.id] = data;
         }
       });
       
       //Add in the settings for each selected handler.
       self.el.find('.handler-selector').trigger('change');
+      
+    },
+    
+    onAddAccount: function(e){
+      
+      e.preventDefault();
+      
+      //Prepare a template and update the DOM.
+      var template = new EJS({url: tmplDir+'account-settings.ejs'});
+      var html = template.render({0: {}});
+      self.el.find('.add-account').remove();
+      self.el.find('.payment-account').removeClass('active');
+      self.el.append(html);
+      
+      //It's a form!
+      self.el.find('.settings-form').restForm({
+        beforeSubmit: function(data, form){
+          ensureBoolean(data, ['paypal', 'is_test_mode']);
+          ensureBoolean(data, ['ideal', 'is_test_mode']);
+        }
+      });
+      
+    },
+    
+    onDeleteAccount: function(e){
+      
+      e.preventDefault();
+      
+      var $form = $(e.target).closest('.settings-form');
+      
+      var removeIt = function(){
+        $form.closest('.payment-account').remove();
+      };
+      
+      if($form.attr('method') == 'PUT')
+        $.rest('DELETE', $form.attr('action')).done(removeIt);
+      else
+        removeIt();
       
     },
     
@@ -93,10 +136,18 @@ jQuery(function($){
     },
     
     onTitleEditorBlur: function(e){
+      
       var $account = $(e.currentTarget).closest('.payment-account');
-      $account.find('.account-title strong').text($account.find('.account-title-editor input').val());
+      var $input = $account.find('.account-title-editor input');
+      
+      //Only change title when input is not empty.
+      if($input.val() !== ''){
+        $account.find('.account-title strong').text($account.find('.account-title-editor input').val());
+      }
+      
       $account.find('.account-title').show();
       $account.find('.account-title-editor').hide();
+      
     },
     
     onHandlerChange: function(e){
@@ -113,9 +164,13 @@ jQuery(function($){
       var method = $method.attr('data-method');
       var account = $method.closest('.payment-account').attr('data-account');
       
+      //Prepare the data. Defaulting to an empty object with a few required sub-elements.
+      var data = (self.data[account] && self.data[account][method]) || {settings_object: {}};
+      if(!data.settings_object) data.settings_object = {};
+      
       //Prepare a template and update the DOM.
       var template = new EJS({url: tmplDir + method+'-'+handler+'-settings.ejs'});
-      template.update($method.find('.settings-container')[0], self.data[account][method] || {settings_object: {}});
+      template.update($method.find('.settings-container')[0], data);
       
     }
     

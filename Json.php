@@ -59,4 +59,88 @@ class Json extends \dependencies\BaseComponent
     
   }
   
+  protected function post_account($data, $sub_routes, $options)
+  {
+    
+    //Make new account.
+    $account = mk('Sql')->model('payment', 'Accounts');
+    return $this->save_account($account, $data);
+    
+  }
+  
+  protected function put_account($data, $sub_routes, $options)
+  {
+    
+    //Get our target.
+    $account = mk('Sql')->table('payment', 'Accounts')
+      ->pk($sub_routes->{0}->get('int'))
+      ->execute_single()
+      ->is('empty', function(){
+        throw new \exception\NotFound('No account with this ID.');
+      });
+    
+    return $this->save_account($account, $data);
+    
+  }
+  
+  protected function delete_account($options, $sub_routes)
+  {
+    
+    //Get our target.
+    $account = mk('Sql')->table('payment', 'Accounts')
+      ->pk($sub_routes->{0}->get('int'))
+      ->execute_single()
+      ->is('empty', function(){
+        throw new \exception\NotFound('No account with this ID.');
+      });
+    
+    //Destroy it!
+    $account->delete();
+    
+  }
+  
+  private function save_account($account, $data)
+  {
+    
+    //Set title.
+    $account->merge($data->having('title'));
+    
+    //Store it.
+    $account->save();
+    
+    //Get our buddies.
+    $methods = array('paypal', 'ideal');
+    foreach($methods as $method)
+    {
+      
+      $account->{$method}
+        
+        //Method wasn't known yet?
+        ->is('empty', function()use($account, $data, $method){
+          return $account->{$method}->become(
+            mk('Sql')->model('payment', 'AccountMethods')
+              ->set(array(
+                'account_id' => $account->id,
+                'method' => strtoupper($method)
+              ))
+          );
+        })
+        
+        //Insert settings we could have changed.
+        ->merge(array(
+          'handler' => max($data->{$method}->handler->get('int'), 0),
+          'is_enabled' => $data->{$method}->handler->get('int') > 0,
+          'is_test_mode' => $data->{$method}->is_test_mode->get('boolean'),
+          'settings' => $data->{$method}->without('handler', 'is_test_mode')->as_json()
+        ))
+        
+        //Store it.
+        ->save();
+      
+    }
+    
+    return $account;
+    
+  }
+  
 }

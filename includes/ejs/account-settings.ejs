@@ -5,8 +5,8 @@
     <form class="settings-form form clearfix" method="<%= account.id ? 'PUT' : 'POST' %>" action="../rest/payment/account<%= account.id ? '/'+account.id : '' %>">
       
       <div class="account-title">
-        <strong><%= account.title %></strong>
-        <a class="edit-title" href="javascript:;">edit</a>
+        <strong><%= account.title || '<i>Untitled</i>' %></strong>
+        <a class="edit-title icon-pencil fa fa-pencil" href="javascript:;"></a>
       </div>
       
       <div class="account-title-editor" style="display:none;">
@@ -38,6 +38,7 @@
       </div>
       
       <div class="buttonHolder">
+        <input class="delete-account button red primaryAction" type="button" value="Delete" />
         <input class="button black primaryAction" type="submit" value="Save" />
       </div>
       
@@ -46,3 +47,4 @@
   </div>
   <% first = false; %>
 <% } %>
+<a class="add-account" href="javascript:;">+ new</a>

@@ -1,3 +1,10 @@
+#payment-accounts-container .restform-error-message{
+  display:none;
+}
+
+#payment-accounts-container .payment-account{
+  background:#ddedff;
+}
 #payment-accounts-container .account-title,
 #payment-accounts-container .account-title-editor{
   padding:1em;

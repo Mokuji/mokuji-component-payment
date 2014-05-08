@@ -1,13 +1,5 @@
 <?php namespace components\payment; if(!defined('MK')) die('No direct access.'); ?>
 
-<?php /*
-  
-  #TODO
-    - Add account functionality
-    - PUT and POST methods
-  
-*/ ?>
-
 <p class="settings-description"><?php __($names->component, 'SETTINGS_VIEW_DESCRIPTION'); ?></p>
 
 <div id="payment-accounts-container">Laden...</div>
