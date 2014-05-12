@@ -176,7 +176,23 @@ jQuery(function($){
     
   };
   
-  //Run init :D
-  self.init();
+  //EJS is loaded asynchronously, so see if it's there yet.
+  var initAttempts = 5;
+  var tryInit = function(){
+    
+    if(!EJS && initAttempts > 0){
+      
+      initAttempts--;
+      return setTimeout(tryInit, 200);
+      
+    }
+    
+    //We're ready!
+    self.init();
+    
+  };
+  
+  //Have a go at the init.
+  tryInit();
   
 });
