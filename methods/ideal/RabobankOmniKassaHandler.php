@@ -163,12 +163,12 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     $_POST = $post_data;
     $response = $this->lib->validate();
     unset($_POST);
-    
+
     if($response === false){
       mk('Logging')->log('Payment', $this->title, 'Response was invalid.');
       return false;
     }
-    
+
     $tx = mk('Sql')
       ->table('payment', 'Transactions')
       ->where('transaction_reference', "'{$response['transaction_reference']}'")

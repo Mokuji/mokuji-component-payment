@@ -30,7 +30,7 @@ $handler = IdealBaseHandler::get_handler(IdealBaseHandler::TYPE_RABOBANK_OMNIKAS
 
 //Process data.
 $tx = $handler->transaction_callback(mk('Data')->post->as_array());
-if($tx === false) exit;
+if($tx === false) die('There was a callback validation error, my excuses.');
 
 //Move to target URL.
 header('Location: '. mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->get());
