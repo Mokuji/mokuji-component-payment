@@ -39,7 +39,8 @@ To contribute, feel free to [submit issues](https://github.com/Mokuji/mokuji-com
 on the GitHub repository and the maintainers will respond to you.
 
 If you want to submit code, please use the GitHub pull requests feature,
-using the `develop` branch as the merge target.
+using the `develop` branch as the merge target for new features
+or the `master` branch for bugfixes of the latest release.
 
 ## Which core problems does this component solve?
 
