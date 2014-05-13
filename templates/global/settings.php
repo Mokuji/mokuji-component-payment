@@ -30,7 +30,7 @@
     <input type="text" name="mokuji_payment_ideal_rabobank_omnikassa_security_key_version[default]" value="<?php echo $omnikassa->security_key_version; ?>" />
     
     <label>
-      <input type="checkbox" name="mokuji_payment_ideal_rabobank_omnikassa_test_mode[default]" value="1"<?php $omnikassa->test_mode->is(true, function(){ echo ' checked="checked"'; }); ?> />
+      <input type="checkbox" name="mokuji_payment_ideal_rabobank_omnikassa_test_mode[default]" value="1"<?php $omnikassa->test_mode->is('true', function(){ echo ' checked="checked"'; }); ?> />
       <?php __($names->component, 'Test mode'); ?>
     </label>
     
@@ -62,7 +62,7 @@
     <input type="text" name="mokuji_payment_paypal_ec_description[default]" value="<?php echo $ec->description; ?>" />
     
     <label>
-      <input type="checkbox" name="mokuji_payment_paypal_ec_sandbox[default]" value="1"<?php $ec->sandbox->is(true, function(){ echo ' checked="checked"'; }); ?> />
+      <input type="checkbox" name="mokuji_payment_paypal_ec_sandbox[default]" value="1"<?php $ec->sandbox->is('true', function(){ echo ' checked="checked"'; }); ?> />
       <?php __($names->component, 'Sandbox'); ?>
     </label>
     
@@ -77,7 +77,32 @@
 <script type="text/javascript">
 $(function(){
   
-  $('#payment_configuration_form').restForm();
+  var ensureBoolean = function(data, path){
+    
+    var target = data;
+    
+    //Every step before the final one should become objects automatically.
+    var i = 0;
+    while(path.length-1 > i){
+      var next = path[i];
+      target[next] = target[next] || {};
+      target = target[next];
+      i++;
+    }
+    
+    //The last value should be a boolean.
+    var last = path[i];
+    target[last] = target[last] ? true : false;
+    return target[last];
+    
+  };
+  
+  $('#payment_configuration_form').restForm({
+    beforeSubmit: function(data, form){
+      ensureBoolean(data, ['mokuji_payment_ideal_rabobank_omnikassa_test_mode', 'default']);
+      ensureBoolean(data, ['mokuji_payment_paypal_ec_sandbox', 'default']);
+    }
+  });
   
   $('#payment_configuration_form').on('change', 'select.ideal-handler', function(e){
     var handler = $(e.target).val();
