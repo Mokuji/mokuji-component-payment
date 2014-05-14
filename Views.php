@@ -4,17 +4,6 @@
 class Views extends \dependencies\BaseViews
 {
   
-  protected function settings()
-  {
-    
-    mk('Component')->load('payment', 'methods\\ideal\\IdealBaseHandler', false);
-    mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
-    
-    return array(
-      'ideal' => methods\ideal\IdealBaseHandler::get_config(),
-      'paypal' => methods\paypal\PayPalHandler::get_config()
-    );
-    
-  }
+  protected function settings(){}
   
 }

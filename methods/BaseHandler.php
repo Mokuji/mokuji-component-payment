@@ -1,6 +1,6 @@
 <?php namespace components\payment\methods; if(!defined('TX')) die('No direct access.');
 
-mk('Sql')->model('payment', 'Transactions');
+use \components\payment\models\Accounts;
 use \components\payment\models\Transactions;
 use \components\payment\methods\ideal\IdealBaseHandler;
 use \components\payment\methods\paypal\PayPalHandler;
@@ -14,11 +14,10 @@ abstract class BaseHandler
   
   /**
    * Gets a new payment method handler instance based on the provided type or the type setting.
-   * @param integer $type Optional type constant identifying the type of handler.
-   *                      Default: the handler set in the corresponding configuration value.
+   * @param Accounts $account The account to get the associated handler of. Default: the first account.
    * @return BaseHandler  The requested type of handler.
    */
-  // abstract public static function get_handler($type=null);
+  // abstract public static function get_handler(Accounts $account=null);
   
   /**
    * Gets all configuration values related to this payment method.
@@ -67,11 +66,45 @@ abstract class BaseHandler
   {
     
     switch($tx->method->get()){
-      case 'IDEAL': return IdealBaseHandler::get_handler($tx->handler->get('int'));
-      case 'PAYPAL': return PayPalHandler::get_handler($tx->handler->get('int'));
+      case 'IDEAL': return IdealBaseHandler::get_handler($tx->account->get());
+      case 'PAYPAL': return PayPalHandler::get_handler($tx->account->get());
       case null: return null;
       default: throw new \exception\Programmer('Unknown payment method '.$tx->method);
     }
+    
+  }
+  
+  /**
+   * Gets all handlers associated with the given account.
+   * @param  Accounts $account The account to get the associated handlers of. Default: the first account.
+   * @return BaseHandler[] An array of base handlers, keys are the method names in uppercase.
+   */
+  public static function get_handlers(Accounts $account=null)
+  {
+    
+    //Default account?
+    if(!$account || $account->is_empty()){
+      
+      //Get the "Main account" (lowest ID).
+      $account = mk('Sql')->table('payment', 'Accounts')
+        ->order('id')
+        ->execute_single();
+      
+    }
+    
+    $handlers = array();
+    
+    //iDeal?
+    if($account->ideal->is_enabled->get('boolean')){
+      $handlers['IDEAL'] = IdealBaseHandler::get_handler($account);
+    }
+    
+    //Paypal?
+    if($account->paypal->is_enabled->get('boolean')){
+      $handlers['PAYPAL'] = PayPalHandler::get_handler($account);
+    }
+    
+    return $handlers;
     
   }
   

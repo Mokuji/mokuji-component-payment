@@ -1,0 +1,50 @@
+<% var first = true; %>
+<% for(var id in this){ var account = this[id]; %>
+  <div class="payment-account <%= first ? 'active' : '' %>" data-account="<%= account.id %>">
+    
+    <form class="settings-form form clearfix" method="<%= account.id ? 'PUT' : 'POST' %>" action="../rest/payment/account<%= account.id ? '/'+account.id : '' %>">
+      
+      <div class="account-title">
+        <strong><%= account.title || '<i>Untitled</i>' %></strong>
+        <a class="edit-title icon-pencil fa fa-pencil" href="javascript:;"></a>
+      </div>
+      
+      <div class="account-title-editor" style="display:none;">
+        <input name="title" value="<%= account.title %>">
+      </div>
+      
+      <div class="method paypal" data-method="paypal">
+        
+        <p class="method-title">Paypal</p>
+        <select class="handler-selector" name="paypal[handler]">
+          <option value="-1">Disabled</option>
+          <option value="1" <%= account.paypal && account.paypal.handler == 1 ? 'selected="selected"' : '' %>>Express Checkout</option>
+        </select>
+        
+        <div class="settings-container"></div>
+        
+      </div>
+      
+      <div class="method ideal" data-method="ideal">
+        
+        <p class="method-title">iDeal</p>
+        <select class="handler-selector" name="ideal[handler]">
+          <option value="-1">Disabled</option>
+          <option value="1" <%= account.ideal && account.ideal.handler == 1 ? 'selected="selected"' : '' %>>Rabobank OmniKassa</option>
+        </select>
+        
+        <div class="settings-container"></div>
+        
+      </div>
+      
+      <div class="buttonHolder">
+        <input class="delete-account button red primaryAction" type="button" value="Delete" />
+        <input class="button black primaryAction" type="submit" value="Save" />
+      </div>
+      
+    </form>
+    
+  </div>
+  <% first = false; %>
+<% } %>
+<a class="add-account" href="javascript:;">+ new</a>

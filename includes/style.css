@@ -1,0 +1,39 @@
+#payment-accounts-container .restform-error-message{
+  display:none;
+}
+
+#payment-accounts-container .payment-account{
+  background:#ddedff;
+}
+#payment-accounts-container .account-title,
+#payment-accounts-container .account-title-editor{
+  padding:1em;
+  background:#7FB2EC;
+  color:#fff;
+  cursor:pointer;
+}
+  #payment-accounts-container .account-title strong{
+    font-size:1.5em;
+  }
+
+#payment-accounts-container .method{
+  display:none;
+  float:left;
+  width:220px;
+  margin:15px;
+}
+#payment-accounts-container .buttonHolder{
+  display:none;
+}
+#payment-accounts-container .active .buttonHolder,
+#payment-accounts-container .active .method{
+  display:block;
+}
+
+  #payment-accounts-container .method .method-title{
+    font-size:1.2em;
+    font-weight:bold;
+  }
+  #payment-accounts-container .method .settings-container{
+    margin-top:15px;
+  }

@@ -1,122 +1,22 @@
-<?php namespace components\payment; if(!defined('TX')) die('No direct access.'); ?>
+<?php namespace components\payment; if(!defined('MK')) die('No direct access.'); ?>
 
 <p class="settings-description"><?php __($names->component, 'SETTINGS_VIEW_DESCRIPTION'); ?></p>
 
-<form id="payment_configuration_form" class="form edit-payment-configuration-form" action="<?php echo url('?rest=cms/settings',1) ?>" method="put">
-  
-  <div class="ctrlHolder">
-    <label>iDeal handler</label>
-    <select class="ideal-handler" name="mokuji_payment_ideal_handler[default]">
-      <option value="-1"<?php $data->ideal->handler->eq('-1', function(){ echo ' selected="selected"'; }); ?>><?php __($names->component, 'Disabled'); ?></option>
-      <option value="1"<?php $data->ideal->handler->eq('1', function(){ echo ' selected="selected"'; }); ?>>Rabobank OmniKassa</option>
-    </select>
-  </div>
-  
-  <div class="ctrlHolder ideal-handler" data-ideal="1">
-    <h2>Rabobank OmniKassa</h2>
-    
-    <?php $omnikassa = $data->ideal->rabobank->omnikassa; ?>
-    
-    <label><?php __($names->component, 'Merchant ID'); ?></label>
-    <input type="text" name="mokuji_payment_ideal_rabobank_omnikassa_merchant_id[default]" value="<?php echo $omnikassa->merchant_id; ?>" />
-    
-    <label><?php __($names->component, 'Merchant Sub ID'); ?></label>
-    <input type="text" name="mokuji_payment_ideal_rabobank_omnikassa_merchant_sub_id[default]" value="<?php echo $omnikassa->merchant_sub_id; ?>" />
-    
-    <label><?php __($names->component, 'Security key'); ?></label>
-    <input type="text" name="mokuji_payment_ideal_rabobank_omnikassa_security_key[default]" value="<?php echo $omnikassa->security_key; ?>" />
-    
-    <label><?php __($names->component, 'Security key version'); ?></label>
-    <input type="text" name="mokuji_payment_ideal_rabobank_omnikassa_security_key_version[default]" value="<?php echo $omnikassa->security_key_version; ?>" />
-    
-    <label>
-      <input type="checkbox" name="mokuji_payment_ideal_rabobank_omnikassa_test_mode[default]" value="1"<?php $omnikassa->test_mode->is('true', function(){ echo ' checked="checked"'; }); ?> />
-      <?php __($names->component, 'Test mode'); ?>
-    </label>
-    
-  </div>
-  
-  <div class="ctrlHolder">
-    <label>PayPal</label>
-    <select class="paypal-handler" name="mokuji_payment_paypal_handler[default]">
-      <option value="-1"<?php $data->paypal->handler->eq('-1', function(){ echo ' selected="selected"'; }); ?>><?php __($names->component, 'Disabled'); ?></option>
-      <option value="1"<?php $data->paypal->handler->eq('1', function(){ echo ' selected="selected"'; }); ?>>Enabled</option>
-    </select>
-  </div>
-  
-  <div class="ctrlHolder paypal-handler" data-paypal="1">
-    <h2>PayPal</h2>
-    
-    <?php $ec = $data->paypal->ec; ?>
-    
-    <label><?php __($names->component, 'User'); ?></label>
-    <input type="text" name="mokuji_payment_paypal_ec_user[default]" value="<?php echo $ec->user; ?>" />
-    
-    <label><?php __($names->component, 'Password'); ?></label>
-    <input type="text" name="mokuji_payment_paypal_ec_pwd[default]" value="<?php echo $ec->pwd; ?>" />
-    
-    <label><?php __($names->component, 'Signature'); ?></label>
-    <input type="text" name="mokuji_payment_paypal_ec_signature[default]" value="<?php echo $ec->signature; ?>" />
-    
-    <label><?php __($names->component, 'Description'); ?></label>
-    <input type="text" name="mokuji_payment_paypal_ec_description[default]" value="<?php echo $ec->description; ?>" />
-    
-    <label>
-      <input type="checkbox" name="mokuji_payment_paypal_ec_sandbox[default]" value="1"<?php $ec->sandbox->is('true', function(){ echo ' checked="checked"'; }); ?> />
-      <?php __($names->component, 'Sandbox'); ?>
-    </label>
-    
-  </div>
-  
-  <div class="buttonHolder">
-    <input type="submit" value="<?php __('Save'); ?>" class="primaryAction button black">
-  </div>
-  
-</form>
+<div id="payment-accounts-container">Laden...</div>
 
 <script type="text/javascript">
-$(function(){
+(function() {
   
-  var ensureBoolean = function(data, path){
-    
-    var target = data;
-    
-    //Every step before the final one should become objects automatically.
-    var i = 0;
-    while(path.length-1 > i){
-      var next = path[i];
-      target[next] = target[next] || {};
-      target = target[next];
-      i++;
-    }
-    
-    //The last value should be a boolean.
-    var last = path[i];
-    target[last] = target[last] ? true : false;
-    return target[last];
-    
+  var loadScript = function(url){
+    var script_el = document.createElement('script');
+    script_el.type = 'text/javascript';
+    script_el.async = true;
+    script_el.src = url;
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script_el, s);
   };
   
-  $('#payment_configuration_form').restForm({
-    beforeSubmit: function(data, form){
-      ensureBoolean(data, ['mokuji_payment_ideal_rabobank_omnikassa_test_mode', 'default']);
-      ensureBoolean(data, ['mokuji_payment_paypal_ec_sandbox', 'default']);
-    }
-  });
+  loadScript("<?php echo URL_PLUGINS.'ejs/src/ejs.js'; ?>");
+  loadScript("<?php echo $paths->component.'includes/js/account-settings.js'; ?>");
   
-  $('#payment_configuration_form').on('change', 'select.ideal-handler', function(e){
-    var handler = $(e.target).val();
-    $('.ctrlHolder.ideal-handler').hide();
-    $('.ctrlHolder[data-ideal="'+handler+'"]').show();
-  });
-  
-  $('#payment_configuration_form').on('change', 'select.paypal-handler', function(e){
-    var handler = $(e.target).val();
-    $('.ctrlHolder.paypal-handler').hide();
-    $('.ctrlHolder[data-paypal="'+handler+'"]').show();
-  });
-  
-  $('#payment_configuration_form select').trigger('change');
-  
-});
+})();
 </script>

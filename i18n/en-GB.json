@@ -1,6 +1,6 @@
 {
-  "SETTINGS_VIEW_TITLE": "Payment methods",
-  "SETTINGS_VIEW_DESCRIPTION": "Here you can configure the different payment methods you want to offer.",
+  "SETTINGS_VIEW_TITLE": "Payment accounts",
+  "SETTINGS_VIEW_DESCRIPTION": "Here you can configure the different payment accounts and the methods you want to offer.",
   
   "STATUS_SUCCESS": "Success",
   "STATUS_CANCELLED": "Canceled",

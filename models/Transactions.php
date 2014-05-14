@@ -58,6 +58,16 @@ class Transactions extends \dependencies\BaseModel
     
   }
   
+  //Get the associated account.
+  public function get_account()
+  {
+    
+    return $this->table('Accounts')
+      ->pk($this->account_id)
+      ->execute_single();
+    
+  }
+  
   /**
    * Binds the transaction to a specific payment method and handler.
    * 
