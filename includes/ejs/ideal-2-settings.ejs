@@ -1,4 +1,4 @@
-<strong>Rabobank OmniKassa</strong>
+<strong>ING iDeal Basic</strong>
 
 <label>Merchant ID</label>
 <input type="text" name="ideal[merchant_id]" value="<%= esc(this.settings_object.merchant_id) %>" />
@@ -9,8 +9,8 @@
 <label>Security key</label>
 <input type="text" name="ideal[security_key]" value="<%= esc(this.settings_object.security_key) %>" />
 
-<label>Security key version</label>
-<input type="text" name="ideal[security_key_version]" value="<%= esc(this.settings_object.security_key_version) %>" />
+<label>Description</label>
+<input type="text" name="ideal[description]" value="<%= esc(this.settings_object.description) %>" />
 
 <label>
   <input type="checkbox" name="ideal[is_test_mode]" value="1" <%= this.is_test_mode !== false ? 'checked="checked"' : '' %> />
