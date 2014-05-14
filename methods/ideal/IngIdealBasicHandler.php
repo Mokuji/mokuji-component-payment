@@ -199,7 +199,6 @@ class IngIdealBasicHandler extends IdealBaseHandler
   public function transaction_callback($post_data)
   {
     throw new \exception\Programmer('Not implemented yet.');
-    
   }
   
   /**
@@ -237,7 +236,10 @@ class IngIdealBasicHandler extends IdealBaseHandler
     //Gather all the input values.
     $input =
       
-      //Meta-data
+      //Start with our secret.
+      $cf->secret_key.
+      
+      //Meta-data.
       $cf->merchant_id.
       $cf->merchant_sub_id.
       $amount.
@@ -245,7 +247,7 @@ class IngIdealBasicHandler extends IdealBaseHandler
       'ideal'.
       date('Y-m-d\TH:i:s.000\Z', $time+self::TRANSACTION_VALIDITY_TIME).
       
-      //Product 1
+      //Product 1.
       substr($tx->transaction_reference->get('string'), 0, 12).
       $this->config->ing->ideal_basic->description.
       '1'.
