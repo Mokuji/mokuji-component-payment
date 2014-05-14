@@ -1,10 +1,10 @@
 <?php
 
 //Let Mokuji know who we are.
-define('WHOAMI', 'Payment::RabobankOmniKassaReturn');
+define('WHOAMI', 'Payment::RabobankOmniKassaStart');
 
 //Override paths.
-$url_path = str_replace('/mokuji/components/payment/methods/ideal/RabobankOmniKassaReturn.php', '', $_SERVER['PHP_SELF']);
+$url_path = str_replace('/mokuji/components/payment/methods/ideal/RabobankOmniKassaStart.php', '', $_SERVER['PHP_SELF']);
 if(isset($url_path[0]) && $url_path[0] === '/'){ //Not an array, but first string character.
   $url_path = substr($url_path, 1);
 }
@@ -28,13 +28,25 @@ mk('Component')->load('payment', 'methods\\ideal\\IdealBaseHandler', false);
 use \components\payment\methods\ideal\IdealBaseHandler;
 $handler = IdealBaseHandler::get_handler(IdealBaseHandler::TYPE_RABOBANK_OMNIKASSA);
 
-//Process data.
-$tx = $handler->transaction_callback(mk('Data')->post->as_array());
-if($tx === false) die('There was a callback validation error, my excuses.');
+//Show the ridiculous supposed-to-be-hidden-form that the Rabobank requires to start the transaction.
+try{
+  $form = $handler->generate_to_rabobank_form(mk('Data')->get->as_array());
+}catch(\Exception $ex){
+  mk('Logging')->log('Payment', 'RabobankOmniKassaStart', 'Failed to start: '.$ex->getMessage());
+  mk('Logging')->log('Payment', 'RabobankOmniKassaStart', mk('Data')->get->dump());
+  die($ex->getMessage());
+}
 
-//Move to target URL.
-header('Location: '. mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->get());
-mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->un_set();
+?>
 
-//Don't output. Just 302.
-exit;
+<html>
+<head>
+  <title>Doorsturen naar betaalpagina...</title>
+</head>
+<body>
+  
+  Doorsturen naar betaalpagina...
+  <?php echo $form; ?>
+  
+</body>
+</html>

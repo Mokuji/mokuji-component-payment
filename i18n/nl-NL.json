@@ -14,7 +14,7 @@
   "STATUS_EXPIRED_DETAILS": "De transactie was verlopen voor de klant deze volbracht had.",
   "STATUS_OPEN_DETAILS": "De transactie is door de klant afgerond, maar hun bank heeft de betaling nog voltooid.",
   "STATUS_FAILED_DETAILS": "De transactie mislukte met de foutmelding: {0}",
-  "STATUS_UNCONFIRMED_DETAILS": "De transactie is aangemaakt, maar de klant heeft de betalingsstapen nog niet afgerond.",
+  "STATUS_UNCONFIRMED_DETAILS": "De transactie is aangemaakt, maar de klant heeft de betalingsstappen nog niet afgerond.",
   
   "METHOD_IDEAL": "iDeal",
   "METHOD_PAYPAL": "PayPal",

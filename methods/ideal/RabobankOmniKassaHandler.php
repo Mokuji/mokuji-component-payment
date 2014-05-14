@@ -76,39 +76,16 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
   public function transaction_start_request(Transactions $tx, $return_url)
   {
     
-    //Ensure the required fields are present.
-    if(!$tx->id->is_set())
-      throw new \exception\InvalidArgument("The transaction ID is a required field.");
-    
-    if(!$tx->transaction_reference->is_set())
-      throw new \exception\InvalidArgument("The transaction reference is a required field.");
-    
-    if(!$tx->total_price->is_set())
-      throw new \exception\InvalidArgument("The total price is a required field.");
-    
-    //Check the currency.
-    if(!in_array($tx->currency->get('string'), array('EUR')))
-      throw new \exception\InvalidArgument("This payment method handler only supports the 'EUR' currency.");
+    //Validate.
+    $this->validate_transaction($tx);
     
     //Store the location where we should return.
     mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->set((string)$return_url);
     
-    //Add extra fields to the library.
-    // $this->lib->setOrderId($tx->order_id->get('string')); #TODO: this should be an order ID from any higher-level components.
-    $this->lib->setAmount($tx->total_price->get('double'));
-    $this->lib->setTransactionReference($tx->transaction_reference->get('string'));
-    
-    //Have the library build a raw dataset.
-    $raw_data = $this->lib->get_raw_data();
-    
     return Data(array(
-      'action' => $raw_data['_action'],
-      'method' => 'POST',
-      'data' => array(
-        'Data' => $raw_data['Data'],
-        'Seal' => $raw_data['Seal'],
-        'InterfaceVersion' => $raw_data['InterfaceVersion']
-      )
+      'action' => URL_COMPONENTS.'payment/methods/ideal/RabobankOmniKassaStart.php',
+      'method' => 'GET',
+      'data' => array('tx' => $tx->transaction_reference)
     ));
     
   }
@@ -143,10 +120,74 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     $html .= t.'</form>'.n;
     
     //If we need to submit immediately, without user interaction, add this javascript.
-    //I'm aware that it's really ugly. But even Rabobank provided this method, since the client must make the request.
+    //I'm aware that it's really ugly. But even Rabobank provided this method, since the client must make the requests.
     //An alternative would be using AJAX in a frame-like view, that's a hassle though.
     if($immediate === true)
       $html .= t.'<script type="text/javascript"> setTimeout(function(){ document.forms["'.$uname.'"].submit(); }, 100); </script>'.n;
+    
+    return $html;
+    
+  }
+  
+  /**
+   * The second stage for the iDeal payment button. Automatically submitting form to submit POST data to Rabobank.
+   * @param  array $request_data The full REQUEST data provided with the callback.
+   * @return string The form HTML.
+   */
+  public function generate_to_rabobank_form($request_data)
+  {
+    
+    //Get transaction.
+    $tx = mk('Sql')->table('payment', 'Transactions')
+      ->where('transaction_reference', mk('Sql')->escape($request_data['tx']))
+      ->execute_single();
+    
+    //Validate.
+    $this->validate_transaction($tx);
+    
+    //Must claim at this point.
+    if(!$tx->claim('IDEAL', IdealBaseHandler::TYPE_RABOBANK_OMNIKASSA)){
+      throw new \exception\Programmer(
+        'This transaction was already claimed by %s. Please complete the transaction or return to the checkout page.',
+        strtolower($tx->method->get())
+      );
+    }
+    
+    //Add extra fields to the library.
+    // $this->lib->setOrderId($tx->order_id->get('string')); #TODO: this should be an order ID from any higher-level components.
+    $this->lib->setAmount($tx->total_price->get('double'));
+    $this->lib->setTransactionReference($tx->transaction_reference->get('string'));
+    
+    //Have the library build a raw dataset.
+    $raw_data = $this->lib->get_raw_data();
+    
+    //Formulate form information.
+    $request = Data(array(
+      'action' => $raw_data['_action'],
+      'method' => 'POST',
+      'data' => array(
+        'Data' => $raw_data['Data'],
+        'Seal' => $raw_data['Seal'],
+        'InterfaceVersion' => $raw_data['InterfaceVersion']
+      )
+    ));
+    
+    //Create a unique name for the form.
+    $uname = 'tx_'.$tx->transaction_reference->get('string').'_'.sha1(uniqid($tx->order_id->get('string'), true));
+    
+    //Build the form.
+    $html = t.'<form action="'.$request['action'].'" method="'.$request['method'].'" name="'.$uname.'">'.n;
+    
+    //Add it's data.
+    foreach($request['data'] as $name => $value)
+      $html .= t.t.'<input type="hidden" name="'.$name.'" value="'.$value.'" />'.n;
+    
+    //End the form.
+    $html .= t.'</form>'.n;
+    
+    //I'm aware that it's really ugly. But even Rabobank provided this method, since the client browser must make the requests.
+    //An alternative would be using AJAX in a frame-like view, that's a hassle though.
+    $html .= t.'<script type="text/javascript"> setTimeout(function(){ document.forms["'.$uname.'"].submit(); }, 100); </script>'.n;
     
     return $html;
     
@@ -163,15 +204,15 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     $_POST = $post_data;
     $response = $this->lib->validate();
     unset($_POST);
-    
+
     if($response === false){
       mk('Logging')->log('Payment', $this->title, 'Response was invalid.');
       return false;
     }
-    
+
     $tx = mk('Sql')
       ->table('payment', 'Transactions')
-      ->where('transaction_reference', "'{$response['transaction_reference']}'")
+      ->where('transaction_reference', mk('Sql')->escape($response['transaction_reference']))
       ->execute_single();
     
     if($tx->is_empty()){
@@ -179,11 +220,11 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
       return false;
     }
     
-    #TODO: What if you paid the same transaction with two payment methods? At least log it.
-    if(!$tx->claim('IDEAL', self::TYPE_RABOBANK_OMNIKASSA)){
-      mk('Logging')->log('Payment', $this->title, 'Could not claim.');
-      return false;
-    }
+    // #TODO: What if you paid the same transaction with two payment methods? At least log it.
+    // if(!$tx->claim('IDEAL', self::TYPE_RABOBANK_OMNIKASSA)){
+    //   mk('Logging')->log('Payment', $this->title, 'Could not claim.');
+    //   return false;
+    // }
     
     $codes = array(
       '00' => 'SUCCESS',
@@ -245,6 +286,30 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     */
     
     return false;
+    
+  }
+  
+  /**
+   * Do a couple of checks that we have to repeat.
+   * @param  Transactions $tx
+   * @return void
+   */
+  protected function validate_transaction(Transactions $tx)
+  {
+    
+    //Ensure the required fields are present.
+    if(!$tx->id->is_set())
+      throw new \exception\InvalidArgument("The transaction ID is a required field.");
+    
+    if(!$tx->transaction_reference->is_set())
+      throw new \exception\InvalidArgument("The transaction reference is a required field.");
+    
+    if(!$tx->total_price->is_set())
+      throw new \exception\InvalidArgument("The total price is a required field.");
+    
+    //Check the currency.
+    if(!in_array($tx->currency->get('string'), array('EUR')))
+      throw new \exception\InvalidArgument("This payment method handler only supports the 'EUR' currency.");
     
   }
   
