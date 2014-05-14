@@ -310,28 +310,4 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     
   }
   
-  /**
-   * Do a couple of checks that we have to repeat.
-   * @param  Transactions $tx
-   * @return void
-   */
-  protected function validate_transaction(Transactions $tx)
-  {
-    
-    //Ensure the required fields are present.
-    if(!$tx->id->is_set())
-      throw new \exception\InvalidArgument("The transaction ID is a required field.");
-    
-    if(!$tx->transaction_reference->is_set())
-      throw new \exception\InvalidArgument("The transaction reference is a required field.");
-    
-    if(!$tx->total_price->is_set())
-      throw new \exception\InvalidArgument("The total price is a required field.");
-    
-    //Check the currency.
-    if(!in_array($tx->currency->get('string'), array('EUR')))
-      throw new \exception\InvalidArgument("This payment method handler only supports the 'EUR' currency.");
-    
-  }
-  
 }

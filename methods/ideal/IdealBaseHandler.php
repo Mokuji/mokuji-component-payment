@@ -3,6 +3,7 @@
 use \components\payment\models\Accounts;
 use \components\payment\models\Transactions;
 use \components\payment\methods\BaseHandler;
+use \components\payment\methods\ideal\IngIdealBasicHandler;
 use \components\payment\methods\ideal\RabobankOmniKassaHandler;
 
 /**
@@ -14,6 +15,7 @@ abstract class IdealBaseHandler extends BaseHandler
   
   //iDeal payment method handler types available.
   const TYPE_RABOBANK_OMNIKASSA = 1;
+  const TYPE_ING_IDEAL_BASIC = 2;
   
   /**
    * Gets a new iDeal payment method handler instance based on the provided type or the type setting.
@@ -45,6 +47,9 @@ abstract class IdealBaseHandler extends BaseHandler
       case self::TYPE_RABOBANK_OMNIKASSA:
         return new RabobankOmniKassaHandler($config);
       
+      case self::TYPE_ING_IDEAL_BASIC:
+        return new IngIdealBasicHandler($config);
+      
       default:
         throw new \exception\InvalidArgument(
           'Provided type "%s" is not supported. Please use the available constants.',
@@ -63,23 +68,45 @@ abstract class IdealBaseHandler extends BaseHandler
   public static function get_config(Accounts $account)
   {
     
-    return Data(array(
-      
-      'handler' => $account->ideal->handler,
-      
-      'rabobank' => array(
-        
-        'omnikassa' => array(
-          'merchant_id' => $account->ideal->settings_object->merchant_id,
-          'merchant_sub_id' => $account->ideal->settings_object->merchant_sub_id,
-          'security_key' => $account->ideal->settings_object->security_key,
-          'security_key_version' => $account->ideal->settings_object->security_key_version,
-          'test_mode' => $account->ideal->is_test_mode,
-        )
-        
-      )
-      
+    //Start with the handler.
+    $config = Data(array(
+      'handler' => $account->ideal->handler
     ));
+    
+    //Add handler specific values.
+    switch($account->ideal->handler->get('int')){
+      
+      case self::TYPE_RABOBANK_OMNIKASSA:
+        $config->merge(array(
+          'rabobank' => array(
+            'omnikassa' => array(
+              'merchant_id' => $account->ideal->settings_object->merchant_id,
+              'merchant_sub_id' => $account->ideal->settings_object->merchant_sub_id,
+              'security_key' => $account->ideal->settings_object->security_key,
+              'security_key_version' => $account->ideal->settings_object->security_key_version,
+              'test_mode' => $account->ideal->is_test_mode,
+            )
+          )
+        ));
+        break;
+      
+      case self::TYPE_ING_IDEAL_BASIC:
+        $config->merge(array(
+          'ing' => array(
+            'ideal_basic' => array(
+              'merchant_id' => $account->ideal->settings_object->merchant_id,
+              'merchant_sub_id' => $account->ideal->settings_object->merchant_sub_id,
+              'secret_key' => $account->ideal->settings_object->secret_key,
+              'description' => $account->ideal->settings_object->description,
+              'test_mode' => $account->ideal->is_test_mode,
+            )
+          )
+        ));
+        break;
+      
+    }
+    
+    return $config;
     
   }
   
@@ -131,6 +158,30 @@ abstract class IdealBaseHandler extends BaseHandler
   public static function get_ideal_url()
   {
     return URL_COMPONENTS.'payment/methods/ideal/';
+  }
+  
+  /**
+   * Do a couple of checks that we have to repeat.
+   * @param  Transactions $tx
+   * @return void
+   */
+  protected function validate_transaction(Transactions $tx)
+  {
+    
+    //Ensure the required fields are present.
+    if(!$tx->id->is_set())
+      throw new \exception\InvalidArgument("The transaction ID is a required field.");
+    
+    if(!$tx->transaction_reference->is_set())
+      throw new \exception\InvalidArgument("The transaction reference is a required field.");
+    
+    if(!$tx->total_price->is_set())
+      throw new \exception\InvalidArgument("The total price is a required field.");
+    
+    //Check the currency.
+    if(!in_array($tx->currency->get('string'), array('EUR')))
+      throw new \exception\InvalidArgument("This payment method handler only supports the 'EUR' currency.");
+    
   }
   
 }
