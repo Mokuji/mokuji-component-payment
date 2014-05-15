@@ -13,10 +13,10 @@ class Transactions extends \dependencies\BaseModel
     $relations = array(
     );
   
-  public static function create_transaction($total_price = null, $currency = 'EUR')
+  public static function create_transaction($total_price = null, $currency = 'EUR', $account_id=null)
   {
     
-    raw($total_price);
+    raw($total_price, $currency, $account_id);
     
     $tx = mk('Sql')->model('payment', 'Transactions');
     
@@ -50,6 +50,9 @@ class Transactions extends \dependencies\BaseModel
     
     //Set initial status.
     $tx->status->set('UNCONFIRMED');
+    
+    if($account_id > 0)
+      $tx->account_id->set(intval($account_id));
     
     //To create an ID and a creation date.
     $tx->save();
