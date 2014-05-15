@@ -53,7 +53,7 @@ class IngIdealBasicHandler extends IdealBaseHandler
     mk('Data')->session->payment->tx_return_urls->{$tx->transaction_reference->get()}->set((string)$return_url);
     
     return Data(array(
-      'action' => URL_COMPONENTS.'payment/methods/ideal/INGiDealBasicStart.php',
+      'action' => URL_COMPONENTS.'payment/methods/ideal/IngIdealBasicStart.php',
       'method' => 'GET',
       'data' => array('tx' => $tx->transaction_reference)
     ));
@@ -91,7 +91,6 @@ class IngIdealBasicHandler extends IdealBaseHandler
     
     //If we need to submit immediately, without user interaction, add this javascript.
     //I'm aware that it's really ugly. But even Rabobank provided this method, since the client must make the requests.
-    //An alternative would be using AJAX in a frame-like view, that's a hassle though.
     if($immediate === true)
       $html .= t.'<script type="text/javascript"> setTimeout(function(){ document.forms["'.$uname.'"].submit(); }, 100); </script>'.n;
     
@@ -123,14 +122,6 @@ class IngIdealBasicHandler extends IdealBaseHandler
       );
     }
     
-    // //Add extra fields to the library.
-    // // $this->lib->setOrderId($tx->order_id->get('string')); #TODO: this should be an order ID from any higher-level components.
-    // $this->lib->setAmount($tx->total_price->get('double'));
-    // $this->lib->setTransactionReference($tx->transaction_reference->get('string'));
-    
-    // //Have the library build a raw dataset.
-    // $raw_data = $this->lib->get_raw_data();
-    
     $amount = round($tx->total_price->get('double') * 100);
     $time = time();
     
@@ -139,13 +130,13 @@ class IngIdealBasicHandler extends IdealBaseHandler
       
       'method' => 'POST',
       'action' => $this->config->ing->ideal_basic->test_mode->get('boolean') ?
-        'https://ideal.secure-ing.com/ideal/mpiPayInitIng.do':,
-        'https://idealtest.secure-ing.com/ideal/mpiPayInitIng.do',
+        'https://idealtest.secure-ing.com/ideal/mpiPayInitIng.do':
+        'https://ideal.secure-ing.com/ideal/mpiPayInitIng.do',
       
       'data' => array(
         
-        'merchantId' => $this->config->ing->ideal_basic->merchant_id,
-        'subId' => $this->config->ing->ideal_basic->merchant_sub_id,
+        'merchantID' => $this->config->ing->ideal_basic->merchant_id,
+        'subID' => $this->config->ing->ideal_basic->merchant_sub_id,
         'amount' => $amount,
         'purchaseID' => $tx->transaction_reference,
         'language' => 'nl',
@@ -157,8 +148,8 @@ class IngIdealBasicHandler extends IdealBaseHandler
         #TODO: Decide if this should display actual products.
         'itemNumber1' => substr($tx->transaction_reference->get('string'), 0, 12),
         'itemDescription1' => $this->config->ing->ideal_basic->description,
-        'ItemQuantity1' => '1',
-        'ItemPrice1' => $amount,
+        'itemQuantity1' => 1,
+        'itemPrice1' => $amount,
         
         'urlSuccess' => url('/?action=payment/ing_ideal_basic_success/post&tx='.$tx->transaction_reference, true),
         'urlCancel' => url('/?action=payment/ing_ideal_basic_cancel/post&tx='.$tx->transaction_reference, true),
@@ -178,13 +169,12 @@ class IngIdealBasicHandler extends IdealBaseHandler
     
     //Add it's data.
     foreach($request['data'] as $name => $value)
-      $html .= t.t.'<input type="hidden" name="'.$name.'" value="'.$value.'" />'.n;
+      $html .= t.t.'<input type="hidden" name="'.$name.'" value="'.htmlentities($value).'" />'.n;
     
     //End the form.
     $html .= t.'</form>'.n;
     
     //I'm aware that it's really ugly. But even Rabobank provided this method, since the client browser must make the requests.
-    //An alternative would be using AJAX in a frame-like view, that's a hassle though.
     $html .= t.'<script type="text/javascript"> setTimeout(function(){ document.forms["'.$uname.'"].submit(); }, 100); </script>'.n;
     
     return $html;
