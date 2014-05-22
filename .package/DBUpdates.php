@@ -47,7 +47,7 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
       CREATE TABLE `#__payment_account_methods` (
         `account_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
         `method` ENUM('IDEAL','PAYPAL') NOT NULL,
-        `handler` int(10) unsigned NOT NULL
+        `handler` int(10) unsigned NOT NULL,
         `is_enabled` bit(1) NOT NULL DEFAULT b'0',
         `is_test_mode` bit(1) NOT NULL DEFAULT b'0',
         `settings` TEXT NOT NULL,

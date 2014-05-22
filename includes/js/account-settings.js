@@ -23,7 +23,7 @@ jQuery(function($){
   };
   
   var esc = function(input){
-    return input.replace(/"/g, '&quot;');
+    return input ? input.replace(/"/g, '&quot;') : input;
   };
   
   var self = window.PaymentAccountSettings = {
@@ -182,13 +182,13 @@ jQuery(function($){
   };
   
   //EJS is loaded asynchronously, so see if it's there yet.
-  var initAttempts = 5;
+  var initAttempts = 10;
   var tryInit = function(){
     
-    if(!EJS && initAttempts > 0){
+    if(!window.EJS && initAttempts > 0){
       
       initAttempts--;
-      return setTimeout(tryInit, 200);
+      return setTimeout(tryInit, 250);
       
     }
     
