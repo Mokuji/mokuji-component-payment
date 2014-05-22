@@ -10,6 +10,76 @@ class IngIdealBasicHandler extends IdealBaseHandler
   
   CONST TRANSACTION_VALIDITY_TIME = 3600; //Max: 1 hour
   
+  private static $ENDPOINT_MAPPING = array(
+    'CANCELLED' => 'CANCELLED',
+    'SUCCESS' => 'SUCCESS',
+    'ERROR' => 'OPEN'
+  );
+  
+  private static $XML_STATUS_MAPPING = array(
+    'Open' => 'OPEN',
+    'Expired' => 'EXPIRED',
+    'Success' => 'SUCCESS',
+    'Cancelled' => 'CANCELLED',
+    '' => 'FAILED'
+  );
+  
+  /**
+   * A method to parse XML information callbacks.
+   * @param  string $xml_string The raw XML as it was received.
+   * @return Data An array with data that can be merged directly into a Transactions model.
+   */
+  public static function parse_xml_callback($xml_string)
+  {
+    
+    //Root document.
+    $doc = new \DOMDocument();
+    $doc->loadXML($xml_string);
+    $xpath = new \DOMXpath($doc);
+    $xpath->registerNamespace('msg', 'http://www.idealdesk.com/Message');
+    
+    //Notification (root) element.
+    $notification = $xpath->query('//msg:Notification')->item(0);
+    
+    //Data nodes.
+    $timestampEl = $xpath->query('//msg:Notification/msg:createDateTimeStamp')->item(0);
+    $transactionIdEl = $xpath->query('//msg:Notification/msg:transactionID')->item(0);
+    $purchaseIdEl = $xpath->query('//msg:Notification/msg:purchaseID')->item(0);
+    $statusEl = $xpath->query('//msg:Notification/msg:status')->item(0);
+    
+    //Parse this information.
+    $data = Data();
+    
+    //Status name.
+    if(array_key_exists($statusEl->nodeValue, self::$XML_STATUS_MAPPING)){
+      $data->merge(array(
+        'status' => self::$XML_STATUS_MAPPING[$statusEl->nodeValue],
+        'error_information' => 'NULL' //We can remove this now that we have a proper status.
+      ));
+    }
+    
+    //Remote Transaction ID.
+    $data->merge(array('transaction_id_remote' => $transactionIdEl->nodeValue));
+    
+    //Creation timestamp.
+    preg_match('~(\d{4})[ \-:]?(\d{2})[ \-:]?(\d{2})[ \-:]?(\d{2})[ \-:]?(\d{2})[ \-:]?(\d{2})~', $timestampEl->nodeValue, $matches);
+    $time = mktime(
+      $matches[4], //hour
+      $matches[5], //minute
+      $matches[6], //second
+      $matches[2], //month
+      $matches[3], //day
+      $matches[1]  //year
+    );
+    $data->merge(array('dt_transaction_remote'=>date('Y-m-d H:i:s', $time)));
+    
+    //Transaction reference.
+    $data->merge(array('transaction_reference' => $purchaseIdEl->nodeValue));
+    
+    return $data;
+    
+  }
+  
   /**
    * The title of this handler, used for logging.
    * @var string
@@ -34,7 +104,7 @@ class IngIdealBasicHandler extends IdealBaseHandler
       ($config->ing->ideal_basic->test_mode->get('boolean') ? ' TestMode' : '');
     
     $this->config = $config;
-        
+    
   }
   
   /**
@@ -125,6 +195,8 @@ class IngIdealBasicHandler extends IdealBaseHandler
     $amount = round($tx->total_price->get('double') * 100);
     $time = time();
     
+    $hash = $this->create_hash($tx, $time);
+    
     //Formulate form information.
     $request = Data(array(
       
@@ -137,25 +209,25 @@ class IngIdealBasicHandler extends IdealBaseHandler
         
         'merchantID' => $this->config->ing->ideal_basic->merchant_id,
         'subID' => $this->config->ing->ideal_basic->merchant_sub_id,
-        'amount' => $amount,
         'purchaseID' => $tx->transaction_reference,
-        'language' => 'nl',
+        'amount' => $amount,
         'currency' => $tx->currency,
+        'language' => 'nl',
         'description' => $this->config->ing->ideal_basic->description,
         'paymentType' => 'ideal',
         'validUntil' => date('Y-m-d\TH:i:s.000\Z', $time+self::TRANSACTION_VALIDITY_TIME),
         
         #TODO: Decide if this should display actual products.
-        'itemNumber1' => substr($tx->transaction_reference->get('string'), 0, 12),
+        'itemNumber1' => 1,
         'itemDescription1' => $this->config->ing->ideal_basic->description,
         'itemQuantity1' => 1,
         'itemPrice1' => $amount,
         
         'urlSuccess' => url('/?action=payment/ing_ideal_basic_success/post&tx='.$tx->transaction_reference, true),
-        'urlCancel' => url('/?action=payment/ing_ideal_basic_cancel/post&tx='.$tx->transaction_reference, true),
+        'urlCancel' => url('/?action=payment/ing_ideal_basic_cancelled/post&tx='.$tx->transaction_reference, true),
         'urlError' => url('/?action=payment/ing_ideal_basic_error/post&tx='.$tx->transaction_reference, true),
         
-        'hash' => $this->create_hash($tx, $time)
+        'hash' => sha1($hash)
         
       )
       
@@ -188,7 +260,50 @@ class IngIdealBasicHandler extends IdealBaseHandler
    */
   public function transaction_callback($post_data)
   {
-    throw new \exception\Programmer('Not implemented yet.');
+    
+    //Was it an XML callback?
+    if(isset($post_data['transaction_id_remote'])){
+      
+      $tx = mk('Sql')->table('payment', 'Transactions')
+        ->where('transaction_reference', "'".$post_data['transaction_reference']."'")
+        ->execute_single();
+      
+      $tx->merge($post_data);
+      return $tx->save();
+      
+    }
+    
+    //Assume an endpoint callback.
+    else{
+      
+      //Fetch the TX.
+      $tx = mk('Sql')->table('payment', 'Transactions')
+        ->where('transaction_reference', "'".$post_data['tx']."'")
+        ->execute_single();
+      
+      //Must be found.
+      if($tx->is_empty())
+        return false;
+      
+      //Check the endpoint value.
+      if(!array_key_exists($post_data['endpoint'], self::$ENDPOINT_MAPPING))
+        throw new \exception\Programmer('Unknown endpoint value %s', $post_data['endpoint']);
+      
+      //Set the status and callback information we can determine.
+      $tx->merge(array(
+        'status' => self::$ENDPOINT_MAPPING[$post_data['endpoint']],
+        'dt_transaction_local' => date('Y-m-d H:i:s'),
+        'dt_status_changed' => date('Y-m-d H:i:s'),
+        'confirmed_amount' => $post_data['endpoint'] === 'SUCCESS' ? $tx->total_price : 0,
+        'error_information' => $post_data['endpoint'] === 'ERROR' ?
+          transf('payment', 'AMBIGUOUS_ERROR_CALLBACK', date('Y-m-d H:i:s')): 'NULL'
+      ));
+      
+      //Return the newly updated TX.
+      return $tx->save();
+      
+    }
+    
   }
   
   /**
@@ -238,8 +353,8 @@ class IngIdealBasicHandler extends IdealBaseHandler
       date('Y-m-d\TH:i:s.000\Z', $time+self::TRANSACTION_VALIDITY_TIME).
       
       //Product 1.
-      substr($tx->transaction_reference->get('string'), 0, 12).
-      $this->config->ing->ideal_basic->description.
+      '1'.
+      $cf->description.
       '1'.
       $amount
       
@@ -252,8 +367,8 @@ class IngIdealBasicHandler extends IdealBaseHandler
       array(   '&',      '<',      '>',        '"'),
       $input);
     
-    return sha1($input);
+    return $input;
     
   }
-    
+  
 }

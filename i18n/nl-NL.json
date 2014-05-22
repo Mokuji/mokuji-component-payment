@@ -18,6 +18,9 @@
   
   "METHOD_IDEAL": "iDeal",
   "METHOD_PAYPAL": "PayPal",
+  "METHOD_UNCLAIMED": "Onbepaald",
+  
+  "AMBIGUOUS_ERROR_CALLBACK": "Jouw bank gaf een dubbelzinnige foutmelding op {0}. Controleer de status handmatig.",
   
   "Disabled": "Uitgeschakeld",
   "Merchant ID": "Merchant ID",
