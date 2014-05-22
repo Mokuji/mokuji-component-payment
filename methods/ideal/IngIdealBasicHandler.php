@@ -269,7 +269,11 @@ class IngIdealBasicHandler extends IdealBaseHandler
         ->execute_single();
       
       $tx->merge($post_data);
-      return $tx->save();
+      $tx->save();
+      
+      mk('Logging')->log('Payment', $this->title, "TX callback completed ".$tx->transaction_reference.' = '.$tx->status);
+      $tx->report();
+      return $tx;
       
     }
     
@@ -299,8 +303,12 @@ class IngIdealBasicHandler extends IdealBaseHandler
           transf('payment', 'AMBIGUOUS_ERROR_CALLBACK', date('Y-m-d H:i:s')): 'NULL'
       ));
       
-      //Return the newly updated TX.
-      return $tx->save();
+      //Save and report.
+      $tx->save();
+      
+      mk('Logging')->log('Payment', $this->title, "TX callback completed ".$tx->transaction_reference.' = '.$tx->status);
+      $tx->report();
+      return $tx;
       
     }
     
