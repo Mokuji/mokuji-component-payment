@@ -149,9 +149,6 @@ class Actions extends \dependencies\BaseComponent
     //Hand the data to the handler.
     $tx->handler()->transaction_callback($data);
     
-    #TODO
-    mail('beanow@oscp.info', 'XML callback', "Data:\n".Data($data)->dump()."\nRaw:\n$xml");
-    
     //Exit either way.
     exit;
     
