@@ -26,6 +26,7 @@ New payment methods are added depending on demand for them.
   - Express Checkout
 * iDeal
   - Rabobank OmniKassa
+  - ING iDeal Basic
 
 ## Maintainers
 

@@ -1,16 +1,16 @@
 <% var first = true; %>
-<% for(var id in this){ var account = this[id]; %>
+<% for(var id in this.accounts){ var account = this.accounts[id]; %>
   <div class="payment-account <%= first ? 'active' : '' %>" data-account="<%= account.id %>">
     
     <form class="settings-form form clearfix" method="<%= account.id ? 'PUT' : 'POST' %>" action="../rest/payment/account<%= account.id ? '/'+account.id : '' %>">
       
       <div class="account-title">
-        <strong><%= account.title || '<i>Untitled</i>' %></strong>
+        <strong><%= esc(account.title) || '<i>Untitled</i>' %></strong>
         <a class="edit-title icon-pencil fa fa-pencil" href="javascript:;"></a>
       </div>
       
       <div class="account-title-editor" style="display:none;">
-        <input name="title" value="<%= account.title %>">
+        <input name="title" value="<%= esc(account.title) %>">
       </div>
       
       <div class="method paypal" data-method="paypal">
@@ -31,6 +31,7 @@
         <select class="handler-selector" name="ideal[handler]">
           <option value="-1">Disabled</option>
           <option value="1" <%= account.ideal && account.ideal.handler == 1 ? 'selected="selected"' : '' %>>Rabobank OmniKassa</option>
+          <option value="2" <%= account.ideal && account.ideal.handler == 2 ? 'selected="selected"' : '' %>>ING iDeal Basic</option>
         </select>
         
         <div class="settings-container"></div>

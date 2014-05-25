@@ -1,16 +1,16 @@
 <strong>Express Checkout</strong>
 
 <label>User</label>
-<input type="text" name="paypal[user]" value="<%= this.settings_object.user %>" />
+<input type="text" name="paypal[user]" value="<%= esc(this.settings_object.user) %>" />
 
 <label>Password</label>
-<input type="text" name="paypal[pwd]" value="<%= this.settings_object.pwd %>" />
+<input type="text" name="paypal[pwd]" value="<%= esc(this.settings_object.pwd) %>" />
 
 <label>Signature</label>
-<input type="text" name="paypal[signature]" value="<%= this.settings_object.signature %>" />
+<input type="text" name="paypal[signature]" value="<%= esc(this.settings_object.signature) %>" />
 
 <label>Description</label>
-<input type="text" name="paypal[description]" value="<%= this.settings_object.description %>" />
+<input type="text" name="paypal[description]" value="<%= esc(this.settings_object.description) %>" />
 
 <label>
   <input type="checkbox" name="paypal[is_test_mode]" value="1" <%= this.is_test_mode !== false ? 'checked="checked"' : '' %> />

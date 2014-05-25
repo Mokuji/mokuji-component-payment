@@ -17,6 +17,9 @@
   "STATUS_UNCONFIRMED_DETAILS": "The transaction has been created, but the customer has not yet proceeded with the payment steps.",
   
   "METHOD_IDEAL": "iDeal",
-  "METHOD_PAYPAL": "PayPal"
+  "METHOD_PAYPAL": "PayPal",
+  "METHOD_UNCLAIMED": "Undecided",
+  
+  "AMBIGUOUS_ERROR_CALLBACK": "Your bank returned an ambiguous error message at {0}. Confirm the status manually."
   
 }
