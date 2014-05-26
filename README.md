@@ -1,6 +1,6 @@
 # Mokuji component: `payment`
 
-* **Version:** 0.1.2 Beta
+* **Version:** 0.2.0 Beta
 * **License:** GPLv3 (see [`LICENSE`](LICENSE))
 * **Requires:** Mokuji 0.30.1-beta or higher
 
