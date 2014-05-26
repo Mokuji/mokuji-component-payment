@@ -38,9 +38,6 @@ class IngIdealBasicHandler extends IdealBaseHandler
     $xpath = new \DOMXpath($doc);
     $xpath->registerNamespace('msg', 'http://www.idealdesk.com/Message');
     
-    //Notification (root) element.
-    $notification = $xpath->query('//msg:Notification')->item(0);
-    
     //Data nodes.
     $timestampEl = $xpath->query('//msg:Notification/msg:createDateTimeStamp')->item(0);
     $transactionIdEl = $xpath->query('//msg:Notification/msg:transactionID')->item(0);
@@ -217,7 +214,8 @@ class IngIdealBasicHandler extends IdealBaseHandler
         'paymentType' => 'ideal',
         'validUntil' => date('Y-m-d\TH:i:s.000\Z', $time+self::TRANSACTION_VALIDITY_TIME),
         
-        #TODO: Decide if this should display actual products.
+        //Make a single product with the predefined description.
+        //Since the payment currently does not process orders of any kind.
         'itemNumber1' => 1,
         'itemDescription1' => $this->config->ing->ideal_basic->description,
         'itemQuantity1' => 1,

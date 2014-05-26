@@ -175,7 +175,6 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
     }
     
     //Add extra fields to the library.
-    // $this->lib->setOrderId($tx->order_id->get('string')); #TODO: this should be an order ID from any higher-level components.
     $this->lib->setAmount($tx->total_price->get('double'));
     $this->lib->setTransactionReference($tx->transaction_reference->get('string'));
     
@@ -240,12 +239,6 @@ class RabobankOmniKassaHandler extends IdealBaseHandler
       mk('Logging')->log('Payment', $this->title, 'Transaction did not exist: '.$response['transaction_reference']);
       return false;
     }
-    
-    // #TODO: What if you paid the same transaction with two payment methods? At least log it.
-    // if(!$tx->claim('IDEAL', self::TYPE_RABOBANK_OMNIKASSA)){
-    //   mk('Logging')->log('Payment', $this->title, 'Could not claim.');
-    //   return false;
-    // }
     
     $codes = array(
       '00' => 'SUCCESS',

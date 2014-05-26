@@ -412,13 +412,11 @@ class PayPalHandler extends BaseHandler
     ));
     
     //Curl to the server.
-    $response = curl_call($url, $data); #TODO: use curl_call()
+    $response = curl_call($url, $data);
     $parsed = mk('Component')->helpers('payment')->parse_query($response['data']);
     
-    if($parsed['ACK'] !== 'Success'){
-      trace($data, $parsed, $response);
+    if($parsed['ACK'] !== 'Success')
       throw new \exception\Programmer('Error with API call.');
-    }
     
     return $parsed;
     
