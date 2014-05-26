@@ -70,7 +70,7 @@ jQuery(function($){
       
       //Prepare a template and update the DOM.
       var template = new EJS({url: tmplDir+'account-settings.ejs'});
-      template.update(self.el[0], self.data);
+      template.update(self.el[0], {accounts: self.data, 'esc':esc});
       
       //It's a form!
       self.el.find('.settings-form').restForm({
@@ -94,7 +94,7 @@ jQuery(function($){
       
       //Prepare a template and update the DOM.
       var template = new EJS({url: tmplDir+'account-settings.ejs'});
-      var html = template.render({0: {}});
+      var html = template.render({'esc':esc, accounts:{0:{}}});
       self.el.find('.add-account').remove();
       self.el.find('.payment-account').removeClass('active');
       self.el.append(html);
@@ -171,6 +171,7 @@ jQuery(function($){
       //Prepare the data. Defaulting to an empty object with a few required sub-elements.
       var data = (self.data[account] && self.data[account][method]) || {settings_object: {}};
       if(!data.settings_object) data.settings_object = {};
+      $.extend(data, {'esc':esc});
       
       //Prepare a template and update the DOM.
       var template = new EJS({url: tmplDir + method+'-'+handler+'-settings.ejs'});
