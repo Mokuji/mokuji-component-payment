@@ -26,38 +26,6 @@ abstract class BaseHandler
   // abstract public static function get_config();
   
   /**
-   * Builds the request meta-data to send in a form starting the transaction.
-   * @param  \components\payment\models\Transactions $tx The transaction model to base the transaction on.
-   * @param string $return_url The location where the eventual status should be reported (ie. the webshop order confirmation page).
-   * @return \dependencies\Data The method, action and data to build the form with.
-   */
-  abstract public function transaction_start_request(Transactions $tx, $return_url);
-  
-  /**
-   * Builds a form starting the transaction.
-   * @param  \components\payment\models\Transactions $tx The transaction model to base the transaction on.
-   * @param string $return_url The location where the eventual status should be reported (ie. the webshop order confirmation page).
-   * @param boolean $immediate Whether or not to immediately start the transaction after this output has been included.
-   * @return string The HTML form.
-   */
-  abstract public function transaction_start_button(Transactions $tx, $return_url, $immediate=false);
-  
-  /**
-   * Processes a callback from the acquiring service and updates the corresponding transaction.
-   * @param  array $post_data The full POST data provided with the callback.
-   * @return \components\payment\models\Transactions $tx The transaction that has been updated.
-   */
-  abstract public function transaction_callback($post_data);
-  
-  /**
-   * Attempts to update the status of the transaction.
-   * Note: Errors will throw an exception, but if updating was not required or not supported, FALSE will be returned.
-   * @param  Transactions $tx The transaction to update the status for.
-   * @return boolean Whether or not the status was updated.
-   */
-  abstract public function update_status(Transactions $tx);
-  
-  /**
    * Gets a new payment method handler instance based on the provided transaction model.
    * @param  Transactions $tx The transaction model to find the handler for.
    * @return BaseHandler?     The handler associated with the model, or NULL if no handler is defined in the model.
@@ -105,6 +73,69 @@ abstract class BaseHandler
     }
     
     return $handlers;
+    
+  }
+  
+  /**
+   * Builds the request meta-data to send in a form starting the transaction.
+   * @param  \components\payment\models\Transactions $tx The transaction model to base the transaction on.
+   * @param string $return_url The location where the eventual status should be reported (ie. the webshop order confirmation page).
+   * @return \dependencies\Data The method, action and data to build the form with.
+   */
+  abstract public function transaction_start_request(Transactions $tx, $return_url);
+  
+  /**
+   * Builds a form starting the transaction.
+   * @param  \components\payment\models\Transactions $tx The transaction model to base the transaction on.
+   * @param string $return_url The location where the eventual status should be reported (ie. the webshop order confirmation page).
+   * @param boolean $immediate Whether or not to immediately start the transaction after this output has been included.
+   * @return string The HTML form.
+   */
+  abstract public function transaction_start_button(Transactions $tx, $return_url, $immediate=false);
+  
+  /**
+   * Processes a callback from the acquiring service and updates the corresponding transaction.
+   * @param  array $post_data The full POST data provided with the callback.
+   * @return \components\payment\models\Transactions $tx The transaction that has been updated.
+   */
+  abstract public function transaction_callback($post_data);
+  
+  /**
+   * Attempts to update the status of the transaction.
+   * Note: Errors will throw an exception, but if updating was not required or not supported, FALSE will be returned.
+   * @param  Transactions $tx The transaction to update the status for.
+   * @return boolean Whether or not the status was updated.
+   */
+  abstract public function update_status(Transactions $tx);
+  
+  /**
+   * Send an alert email to the webmaster.
+   * 
+   * Note: this is a best effort function.
+   *   Always log (and handle) problems as well.
+   * 
+   * @param  string $subject The email subject.
+   * @param  string $message The HTML body of the email.
+   * @return void
+   */
+  protected function alert_webmaster($subject, $message)
+  {
+    
+    try{
+      
+      @mail(
+        EMAIL_NAME_WEBMASTER.' <'.EMAIL_ADDRESS_WEBMASTER.'>',
+        $subject,
+        $message,
+        "MIME-Version: 1.0\r\n".
+        "Content-type: text/html; charset=utf-8\r\n".
+        "From: ".EMAIL_NAME_AUTOMATED_MESSAGES.' <'.EMAIL_ADDRESS_AUTOMATED_MESSAGES.'>'."\r\n".
+        "X-Mailer: Payment webmaster alert"."\r\n"
+      );
+      
+    }catch(\Exception $ex){
+      mk('Logging')->log('Payment', 'Webmaster alert', 'Could not send alert to webmaster: '.$ex->getMessage());
+    }
     
   }
   

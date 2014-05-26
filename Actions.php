@@ -41,6 +41,9 @@ class Actions extends \dependencies\BaseComponent
       ->where('transaction_reference', "'".mk('Data')->get->tx."'")
       ->execute_single();
     
+    if($tx->is_empty())
+      exit;
+    
     mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
     $handler = methods\paypal\PayPalHandler::get_handler($tx->account);
     
@@ -64,6 +67,9 @@ class Actions extends \dependencies\BaseComponent
     $tx = mk('Sql')->table('payment', 'Transactions')
       ->where('transaction_reference', "'".mk('Data')->get->tx."'")
       ->execute_single();
+    
+    if($tx->is_empty())
+      exit;
     
     $handler = methods\ideal\IdealBaseHandler::get_handler($tx->account);
     
@@ -91,6 +97,9 @@ class Actions extends \dependencies\BaseComponent
       ->where('transaction_reference', "'".mk('Data')->get->tx."'")
       ->execute_single();
     
+    if($tx->is_empty())
+      exit;
+    
     $handler = methods\ideal\IdealBaseHandler::get_handler($tx->account);
     
     $tx = $handler->transaction_callback(array(
@@ -117,6 +126,9 @@ class Actions extends \dependencies\BaseComponent
       ->where('transaction_reference', "'".mk('Data')->get->tx."'")
       ->execute_single();
     
+    if($tx->is_empty())
+      exit;
+    
     $handler = methods\ideal\IdealBaseHandler::get_handler($tx->account);
     
     $tx = $handler->transaction_callback(array(
@@ -138,6 +150,7 @@ class Actions extends \dependencies\BaseComponent
   protected function ing_ideal_basic_xml_notification($data)
   {
     
+    //Parse the XML.
     $xml = file_get_contents("php://input");
     $data = methods\ideal\IngIdealBasicHandler::parse_xml_callback($xml);
     
@@ -146,8 +159,20 @@ class Actions extends \dependencies\BaseComponent
       ->where('transaction_reference', "'".$data['transaction_reference']."'")
       ->execute_single();
     
+    if($tx->is_empty()){
+      mk('Logging')->log('Payment', 'ING iDeal Basic XML callback', 'Unknown TX: '.$data['transaction_reference']);
+      exit;
+    }
+    
+    //Get the handler with populated settings.
+    $handler = $tx->handler();
+    
+    //Verify the callback key.
+    if(!$handler->verify_xml_key(mk('Data')->get->key, $tx, $xml))
+      exit;
+    
     //Hand the data to the handler.
-    $tx->handler()->transaction_callback($data);
+    $handler->transaction_callback($data);
     
     //Exit either way.
     exit;

@@ -97,6 +97,7 @@ abstract class IdealBaseHandler extends BaseHandler
               'merchant_id' => $account->ideal->settings_object->merchant_id,
               'merchant_sub_id' => $account->ideal->settings_object->merchant_sub_id,
               'secret_key' => $account->ideal->settings_object->secret_key,
+              'xml_key' => $account->ideal->settings_object->xml_key,
               'description' => $account->ideal->settings_object->description,
               'test_mode' => $account->ideal->is_test_mode,
             )
