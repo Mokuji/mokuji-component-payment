@@ -349,6 +349,45 @@ class IngIdealBasicHandler extends IdealBaseHandler
     mk('Logging')->log('Payment', $this->title, 'IP: '.mk('Data')->server->REMOTE_ADDR);
     mk('Logging')->log('Payment', $this->title, 'User agent: '.mk('Data')->server->HTTP_USER_AGENT);
     
+    $https = mk('Url')->url->segments->scheme->get('string') === 'https';
+    
+    if(!$https){
+      
+      mk('Logging')->log('Payment', $this->title, 'WARNING, unsafe HTTP request made! Use HTTPS. Data should be considered compromised.');
+      
+      //In a live environment we will report this to the webmaster.
+      if(!$this->config->ing->ideal_basic->test_mode->get('boolean')){
+        
+        //Get a good URL representation to send.
+        $request_uri = str_replace((URL_PATH ? '/'.URL_PATH : ''), '', mk('Data')->server->REQUEST_URI->get('string'));
+        if($request_uri[0] == '/')
+          $request_uri = substr($request_uri, 1);
+        $location = URL_BASE.$request_uri;
+        
+        //Format and send the message.
+        $this->alert_webmaster(
+          '[Payment] Security alert',
+          'An HTTP connection was used for an XML callback to the ING iDeal Basic payment method.'.br.n.
+          'This is insecure and all data below should be considered compromised.'.br.n.
+          br.n.
+          '<b>Request information</b>'.br.n.
+          'Timestamp: '.date('Y-m-d H:i:s').br.n.
+          'IP address: '.mk('Data')->server->REMOTE_ADDR.
+            ' <a href="http://whois.domaintools.com/go/?q='.mk('Data')->server->REMOTE_ADDR.'&service=whois">lookup</a>'.br.n.
+          'User agent: '.mk('Data')->server->HTTP_USER_AGENT.br.n.
+          br.n.
+          '<b>Compromised data</b>'.br.n.
+          'XML callback key used: '.$xml_key.br.n.
+          'Transaction reference: '.$tx->transaction_reference.br.n.
+          'Raw status update: '.br.n.'<pre>'.
+            'POST '.$location.n.n.
+            htmlentities($xml).
+          '</pre>'.n
+        );
+      }
+      
+    }
+    
     $setting_key = $this->config->ing->ideal_basic->xml_key->get('string');
     
     if(empty($setting_key)){
@@ -382,7 +421,7 @@ class IngIdealBasicHandler extends IdealBaseHandler
       //Format and send the message.
       $this->alert_webmaster(
         '[Payment] Security alert',
-        'An invalid XML callback key was used.'.br.n.
+        'An invalid XML callback key was used for the ING iDeal Basic payment method.'.br.n.
         'This could indicate a hacking attempt or a misconfiguration.'.br.n.
         br.n.
         'Given key: '.$xml_key.br.n.
