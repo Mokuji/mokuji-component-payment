@@ -29,5 +29,11 @@
   "Password": "Wachtwoord",
   "Signature": "Handtekening",
   "Description": "Omschrijving",
-  "Sandbox": "Sandbox"
+  "Sandbox": "Sandbox",
+  
+  "Main account": "Hoofdaccount",
+
+  "Pay with iDeal": "Betaal met iDeal",
+  "Pay with PayPal": "Betaal met PayPal"
+  
 }
