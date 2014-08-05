@@ -27,7 +27,7 @@ class Actions extends \dependencies\BaseComponent
     if($tx->is_empty())
       throw \exception\NotFound('No transaction with this reference.');
     
-    $handler = methods\paypal\PayPalHandler::get_handler($tx->account);
+    $handler = methods\paypal\PayPalHandler::get_handler(data_of($tx->account));
     $handler->set_express_checkout($tx);
     exit;
     
@@ -45,7 +45,7 @@ class Actions extends \dependencies\BaseComponent
       exit;
     
     mk('Component')->load('payment', 'methods\\paypal\\PayPalHandler', false);
-    $handler = methods\paypal\PayPalHandler::get_handler($tx->account);
+    $handler = methods\paypal\PayPalHandler::get_handler(data_of($tx->account));
     
     $tx = $handler->transaction_callback(mk('Data')->request);
     
@@ -71,7 +71,7 @@ class Actions extends \dependencies\BaseComponent
     if($tx->is_empty())
       exit;
     
-    $handler = methods\ideal\IdealBaseHandler::get_handler($tx->account);
+    $handler = methods\ideal\IdealBaseHandler::get_handler(data_of($tx->account));
     
     $tx = $handler->transaction_callback(array(
       'tx' => $tx->transaction_reference,
@@ -100,7 +100,7 @@ class Actions extends \dependencies\BaseComponent
     if($tx->is_empty())
       exit;
     
-    $handler = methods\ideal\IdealBaseHandler::get_handler($tx->account);
+    $handler = methods\ideal\IdealBaseHandler::get_handler(data_of($tx->account));
     
     $tx = $handler->transaction_callback(array(
       'tx' => $tx->transaction_reference,
@@ -129,7 +129,7 @@ class Actions extends \dependencies\BaseComponent
     if($tx->is_empty())
       exit;
     
-    $handler = methods\ideal\IdealBaseHandler::get_handler($tx->account);
+    $handler = methods\ideal\IdealBaseHandler::get_handler(data_of($tx->account));
     
     $tx = $handler->transaction_callback(array(
       'tx' => $tx->transaction_reference,
