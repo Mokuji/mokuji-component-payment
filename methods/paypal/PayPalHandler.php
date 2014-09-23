@@ -209,8 +209,20 @@ class PayPalHandler extends BaseHandler
     $details = $this->get_express_checkout_details($post_data->token);
     $tx = $details['model'];
     
-    if($details['response']['CHECKOUTSTATUS'] === 'PaymentActionNotInitiated')
-      $this->do_express_checkout_payment($tx);
+    //When we need to do a callback to complete.
+    if($details['response']['CHECKOUTSTATUS'] === 'PaymentActionNotInitiated'){
+      
+      //The consumer payer id must be present.
+      if($tx->consumer_payerid->is_set()){
+        $this->do_express_checkout_payment($tx);
+      }
+      
+      //Otherwise it results in a cancel.
+      else{
+        $tx->merge(array('status' => 'CANCELED'));
+      }
+      
+    }
     
     mk('Logging')->log('Payment', $this->title, 'TX callback completed '.$tx->transaction_reference.' = '.$tx->status);
     
