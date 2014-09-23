@@ -31,7 +31,7 @@ $tx = mk('Sql')->table('payment', 'Transactions')
   ->where('transaction_reference', mk('Sql')->escape(mk('Data')->get->tx))
   ->execute_single();
 
-$handler = IdealBaseHandler::get_handler(data_of($tx->account));
+$handler = IdealBaseHandler::get_handler($tx->getAccount());
 
 //Show the ridiculous supposed-to-be-hidden-form that is required to start the transaction.
 try{

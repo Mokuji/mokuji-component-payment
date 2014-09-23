@@ -62,7 +62,9 @@ class Transactions extends \dependencies\BaseModel
   }
   
   //Get the associated account.
-  public function get_account()
+  //Please note: the Data class breaks any kind of getting and setting of this object.
+  //Always use it as a class of it's own.
+  public function getAccount()
   {
     
     return $this->table('Accounts')
