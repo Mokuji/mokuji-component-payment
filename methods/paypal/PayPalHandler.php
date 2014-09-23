@@ -291,11 +291,20 @@ class PayPalHandler extends BaseHandler
       'status' => $status === 'SUCCESS' ? $tx->status->get() : $status,
       'dt_status_changed' => date('Y-m-d H:i:s'),
       'transaction_id_remote' => isset($response['PAYMENTREQUESTINFO_0_TRANSACTIONID']) ? $response['PAYMENTREQUESTINFO_0_TRANSACTIONID'] : null,
-      'consumer_name' => $response['FIRSTNAME'].' '.$response['LASTNAME'],
-      'consumer_email' => $response['EMAIL'],
-      'consumer_payerid' => $response['PAYERID'],
       'error_information' => "{$dr['CHECKOUTSTATUS']}: {$dr['PAYMENTREQUESTINFO_0_SHORTMESSAGE']} {$dr['PAYMENTREQUESTINFO_0_LONGMESSAGE']} (ErrorNR {$dr['PAYMENTREQUESTINFO_0_ERRORCODE']})"
     ));
+    
+    //Names are not there when canceling.
+    if(isset($response['FIRSTNAME']) && $response['LASTNAME'])
+      $tx->merge(array('consumer_name' => $response['FIRSTNAME'].' '.$response['LASTNAME']));
+    
+    //Email is not there when canceling.
+    if(isset($response['EMAIL']))
+      $tx->merge(array('consumer_email' => $response['EMAIL']));
+    
+    //Payer ID is not there when canceling.
+    if(isset($response['PAYERID']))
+      $tx->merge(array('consumer_payerid' => $response['PAYERID']));
     
     $tx->save();
     
