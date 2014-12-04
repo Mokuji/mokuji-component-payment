@@ -34,6 +34,9 @@
   "Description": "Omschrijving",
   "Sandbox": "Sandbox",
   
-  "Main account": "Hoofdaccount"
+  "Main account": "Hoofdaccount",
+
+  "Pay with iDeal": "Betaal met iDeal",
+  "Pay with PayPal": "Betaal met PayPal"
   
 }
