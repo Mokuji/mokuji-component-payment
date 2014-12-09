@@ -31,7 +31,8 @@ $tx = mk('Sql')->table('payment', 'Transactions')
   ->where('transaction_reference', mk('Sql')->escape(mk('Data')->get->tx))
   ->execute_single();
 
-$handler = IdealBaseHandler::get_handler($tx->account->get());
+$tx_account = ($tx->account instanceof \components\payment\models\Accounts ? $tx->account : $tx->account->get());
+$handler = IdealBaseHandler::get_handler($tx_account);
 
 //Show the ridiculous supposed-to-be-hidden-form that the Rabobank requires to start the transaction.
 try{
