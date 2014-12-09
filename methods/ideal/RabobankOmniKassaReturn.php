@@ -29,7 +29,9 @@ $tx = RabobankOmniKassaHandler::tx_from_callback(mk('Data')->post->as_array());
 
 //Get the handler.
 use \components\payment\methods\ideal\IdealBaseHandler;
-$handler = IdealBaseHandler::get_handler($tx->account->get());
+
+$tx_account = ($tx->account instanceof \components\payment\models\Accounts ? $tx->account : $tx->account->get());
+$handler = IdealBaseHandler::get_handler($tx_account);
 
 //Process data.
 $tx = $handler->transaction_callback(mk('Data')->post->as_array());
